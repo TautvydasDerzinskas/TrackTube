@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Box, Typography, IconButton, Tooltip, Avatar, Slider, Popover } from '@mui/material';
+import { Box, Typography, IconButton, Tooltip, Avatar, Slider, Popover, Chip } from '@mui/material';
 import {
   MusicNote as MusicNoteIcon, Close as CloseIcon,
   SkipPrevious as SkipPreviousIcon, SkipNext as SkipNextIcon,
@@ -44,6 +44,13 @@ function formatTime(seconds: number): string {
   const secs = total % 60;
   return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 }
+
+// One-tap volume presets shown as chips under the slider.
+const VOLUME_PRESETS = [
+  { labelKey: 'volumeAmbient', value: 0.05 },
+  { labelKey: 'volumeRegular', value: 0.5 },
+  { labelKey: 'volumeParty', value: 1 },
+] as const;
 
 export function MiniPlayer({
   title, artist, thumbnailUrl, isFavourite, onToggleFavourite, audioRef, isAudioPlaying, hasNext, hasPrevious, isRepeat, isShuffle,
@@ -100,13 +107,16 @@ export function MiniPlayer({
     if (audioRef.current) audioRef.current.currentTime = time;
   };
 
-  const handleVolumeChange = (_event: Event, value: number | number[]) => {
-    const v = (Array.isArray(value) ? value[0] : value) / 100;
+  const applyVolume = (v: number) => {
     setVolume(v);
     if (audioRef.current) {
       audioRef.current.volume = v;
       audioRef.current.muted = false;
     }
+  };
+
+  const handleVolumeChange = (_event: Event, value: number | number[]) => {
+    applyVolume((Array.isArray(value) ? value[0] : value) / 100);
   };
 
   const thumbnail = (
@@ -194,14 +204,33 @@ export function MiniPlayer({
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
         transformOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Box sx={{ height: 120, display: 'flex', alignItems: 'center', py: 2, px: 1.5 }}>
-          <Slider
-            orientation="vertical"
-            size="small"
-            value={volume * 100}
-            onChange={handleVolumeChange}
-            sx={{ color: 'primary.main' }}
-          />
+        <Box sx={{ width: 220, py: 1.5, px: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Slider
+              size="small"
+              value={volume * 100}
+              onChange={handleVolumeChange}
+              sx={{ color: 'primary.main', flexGrow: 1 }}
+            />
+            <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0, minWidth: 34, textAlign: 'right' }}>
+              {t('playlists.miniPlayer.volumePercent', { value: Math.round(volume * 100) })}
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 0.75, mt: 1 }}>
+            {VOLUME_PRESETS.map(({ labelKey, value }) => {
+              const active = Math.abs(volume - value) < 0.005;
+              return (
+                <Chip
+                  key={labelKey}
+                  label={t(`playlists.miniPlayer.${labelKey}`)}
+                  size="small"
+                  variant={active ? 'filled' : 'outlined'}
+                  color={active ? 'primary' : 'default'}
+                  onClick={() => applyVolume(value)}
+                />
+              );
+            })}
+          </Box>
         </Box>
       </Popover>
     </>

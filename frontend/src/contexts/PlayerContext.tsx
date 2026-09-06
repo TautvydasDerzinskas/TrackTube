@@ -29,7 +29,7 @@ const SHUFFLE_STORAGE_KEY = 'shuffle_mode';
 
 // How much Cmd/Ctrl+Up/Down nudges volume per keypress (see the global
 // shortcut effect below) — matches KeyboardShortcutsDialog's documented step.
-const VOLUME_STEP = 0.1;
+const VOLUME_STEP = 0.05;
 
 interface PlayerContextType {
   nowPlaying: NowPlaying | null;

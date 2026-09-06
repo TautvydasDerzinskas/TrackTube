@@ -244,6 +244,10 @@
       "play": "Play",
       "pause": "Pause",
       "volume": "Volume",
+      "volumePercent": "{{value}}%",
+      "volumeAmbient": "Ambient",
+      "volumeRegular": "Regular",
+      "volumeParty": "Party",
       "repeat": "Repeat current song",
       "shuffle": "Shuffle",
       "backToPlaylist": "Back to playlist"

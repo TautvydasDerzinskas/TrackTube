@@ -252,6 +252,10 @@
       "play": "Odtwórz",
       "pause": "Wstrzymaj",
       "volume": "Głośność",
+      "volumePercent": "{{value}}%",
+      "volumeAmbient": "W tle",
+      "volumeRegular": "Standardowy",
+      "volumeParty": "Impreza",
       "repeat": "Powtarzaj bieżący utwór",
       "shuffle": "Losowa kolejność",
       "backToPlaylist": "Wróć do playlisty"

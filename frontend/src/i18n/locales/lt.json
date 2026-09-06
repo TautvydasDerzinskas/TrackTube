@@ -248,6 +248,10 @@
       "play": "Groti",
       "pause": "Pristabdyti",
       "volume": "Garsumas",
+      "volumePercent": "{{value}}%",
+      "volumeAmbient": "Foninis",
+      "volumeRegular": "Įprastas",
+      "volumeParty": "Vakarėlis",
       "repeat": "Kartoti dabartinę dainą",
       "shuffle": "Maišyti",
       "backToPlaylist": "Grįžti į grojaraštį"
