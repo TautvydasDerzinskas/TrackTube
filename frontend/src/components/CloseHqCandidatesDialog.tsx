@@ -6,7 +6,8 @@ import {
 import { YouTube as YouTubeIcon, PlayArrow as PlayArrowIcon, Stop as StopIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { CloseHqCandidate, PlaylistVideo } from '../api/youtube';
-import { youtubeWatchUrl, formatDuration } from '../pages/PlaylistsPage/utils';
+import { formatDuration } from '../pages/PlaylistsPage/utils';
+import { usePlayer } from '../contexts/PlayerContext';
 import { ConfirmDialog } from './ConfirmDialog';
 
 // Brand names — deliberately not run through i18n, same as the admin HQ
@@ -53,6 +54,7 @@ interface CloseHqCandidatesDialogProps {
  */
 export function CloseHqCandidatesDialog({ video, candidates, onDismiss, onSelect }: CloseHqCandidatesDialogProps) {
   const { t } = useTranslation();
+  const { openYoutubePopup } = usePlayer();
   const [selected, setSelected] = useState<CloseHqCandidate | null>(null);
 
   // A single shared <audio> element for every candidate's preview clip
@@ -105,7 +107,7 @@ export function CloseHqCandidatesDialog({ video, candidates, onDismiss, onSelect
               </Typography>
             </Box>
             <Tooltip title={t('playlists.videoList.watchOnYouTube')}>
-              <IconButton size="small" component="a" href={youtubeWatchUrl(video.youtubeId)} target="_blank" rel="noopener noreferrer">
+              <IconButton size="small" onClick={() => openYoutubePopup(video.youtubeId, currentLabel)}>
                 <YouTubeIcon fontSize="small" />
               </IconButton>
             </Tooltip>

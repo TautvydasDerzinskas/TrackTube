@@ -256,6 +256,9 @@
       "shuffle": "Maišyti",
       "backToPlaylist": "Grįžti į grojaraštį"
     },
+    "youtubePopup": {
+      "openOnYoutube": "Atverti youtube.com"
+    },
     "deleteConfirm": {
       "title": "Pašalinti grojaraštį?",
       "message": "Tai visam laikui ištrins „{{name}}“ ir visus jo atsisiųstus failus. Šio veiksmo atšaukti negalėsite."

@@ -6,6 +6,7 @@ import { TopBar } from './TopBar';
 import { SIDEBAR_WIDTH, MOBILE_TOPBAR_HEIGHT } from './constants';
 import { MiniPlayer } from './MiniPlayer';
 import { PendingHqCandidatesModal } from '../PendingHqCandidatesModal';
+import { YoutubePopup } from '../YoutubePopup';
 import { PlayerProvider, usePlayer } from '../../contexts/PlayerContext';
 import { PageBackProvider } from '../../contexts/PageBackContext';
 import { useIsMobile } from '../../hooks/useIsMobile';
@@ -92,6 +93,10 @@ function AppLayoutContent() {
           virtualized list or which page the search was started from — see
           its own doc comment for the full story. */}
       <PendingHqCandidatesModal />
+
+      {/* Same "always mounted at the layout level" rationale as MiniPlayer
+          above — survives route changes and whichever menu/dialog opened it. */}
+      <YoutubePopup />
     </Box>
   );
 }

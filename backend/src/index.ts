@@ -23,7 +23,16 @@ import { requireAuth } from './middleware/auth';
 const app = express();
 
 app.set('trust proxy', 2);
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      // Lets the frontend's YoutubePopup embed the official YouTube iframe
+      // player — default-src 'self' would otherwise block it as frame-src.
+      'frame-src': ["'self'", 'https://www.youtube.com', 'https://www.youtube-nocookie.com'],
+    },
+  },
+}));
 app.use(cors({ origin: config.frontendUrl, credentials: true }));
 // Default 100kb is fine for every other route, but the admin CSV track
 // import (backend/src/routes/admin.ts) can legitimately be a few MB for a

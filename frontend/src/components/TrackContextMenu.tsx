@@ -7,8 +7,8 @@ import {
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { playlistsApi, PlaylistVideo } from '../api/youtube';
-import { youtubeWatchUrl } from '../pages/PlaylistsPage/utils';
 import { useToast } from '../contexts/ToastContext';
+import { usePlayer } from '../contexts/PlayerContext';
 import { ConfirmDialog } from './ConfirmDialog';
 import { RenameTrackDialog } from './RenameTrackDialog';
 
@@ -44,6 +44,7 @@ interface TrackContextMenuProps {
 export function TrackContextMenu({ playlistId, video, position, onClose, onDeleted, searching, onSearchHq, onRename, onToggleFavourite }: TrackContextMenuProps) {
   const { t } = useTranslation();
   const { showSuccess, showError } = useToast();
+  const { openYoutubePopup } = usePlayer();
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [renaming, setRenaming] = useState(false);
@@ -107,7 +108,7 @@ export function TrackContextMenu({ playlistId, video, position, onClose, onDelet
           <ListItemText>{t(video.isFavourite ? 'playlists.videoList.removeFavourite' : 'playlists.videoList.addFavourite')}</ListItemText>
         </MenuItem>
         <Divider />
-        <MenuItem component="a" href={youtubeWatchUrl(video.youtubeId)} target="_blank" rel="noopener noreferrer" onClick={onClose}>
+        <MenuItem onClick={() => { onClose(); openYoutubePopup(video.youtubeId, video.artist ? `${video.artist} - ${video.title}` : video.title); }}>
           <ListItemIcon><YouTubeIcon fontSize="small" /></ListItemIcon>
           <ListItemText>{t('playlists.videoList.watchOnYouTube')}</ListItemText>
         </MenuItem>

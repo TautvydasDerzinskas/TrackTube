@@ -5,7 +5,8 @@ import {
 import { MusicNote as MusicNoteIcon, YouTube as YouTubeIcon, OpenInNew as OpenInNewIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { DiscoverResult } from '../../api/youtube';
-import { formatDuration, youtubeWatchUrl } from '../PlaylistsPage/utils';
+import { formatDuration } from '../PlaylistsPage/utils';
+import { usePlayer } from '../../contexts/PlayerContext';
 
 interface DiscoverTracksProps {
   state: DiscoverResult[] | 'loading' | 'error' | 'disabled';
@@ -13,6 +14,7 @@ interface DiscoverTracksProps {
 
 export function DiscoverTracks({ state }: DiscoverTracksProps) {
   const { t } = useTranslation();
+  const { openYoutubePopup } = usePlayer();
 
   if (state === 'loading') {
     return <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}><CircularProgress size={24} /></Box>;
@@ -71,10 +73,7 @@ export function DiscoverTracks({ state }: DiscoverTracksProps) {
           return item.youtubeId ? (
             <ListItemButton
               key={`${item.artist}-${item.title}-${index}`}
-              component="a"
-              href={youtubeWatchUrl(item.youtubeId)}
-              target="_blank"
-              rel="noopener noreferrer"
+              onClick={() => openYoutubePopup(item.youtubeId!, item.artist ? `${item.artist} - ${item.title}` : item.title)}
               sx={rowSx}
             >
               {inner}

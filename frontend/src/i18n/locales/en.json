@@ -252,6 +252,9 @@
       "shuffle": "Shuffle",
       "backToPlaylist": "Back to playlist"
     },
+    "youtubePopup": {
+      "openOnYoutube": "Open on youtube.com"
+    },
     "deleteConfirm": {
       "title": "Remove playlist?",
       "message": "This will permanently delete \"{{name}}\" and all its downloaded files. This can't be undone."

@@ -6,7 +6,7 @@ import {
 import { YouTube as YouTubeIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { playlistsApi, PlaylistVideo } from '../api/youtube';
-import { youtubeWatchUrl } from '../pages/PlaylistsPage/utils';
+import { usePlayer } from '../contexts/PlayerContext';
 
 interface SuggestedName {
   artist: string | null;
@@ -36,6 +36,7 @@ interface RenameTrackDialogProps {
  */
 export function RenameTrackDialog({ playlistId, video, open, onClose, onRename }: RenameTrackDialogProps) {
   const { t } = useTranslation();
+  const { openYoutubePopup } = usePlayer();
   const [artist, setArtist] = useState(video.artist ?? '');
   const [title, setTitle] = useState(video.title);
   const [suggested, setSuggested] = useState<SuggestedName | 'loading' | 'error'>('loading');
@@ -94,7 +95,7 @@ export function RenameTrackDialog({ playlistId, video, open, onClose, onRename }
             {t('playlists.videoList.originalTitle')}: {video.originalTitle ?? video.title}
           </Typography>
           <Tooltip title={t('playlists.videoList.watchOnYouTube')}>
-            <IconButton size="small" component="a" href={youtubeWatchUrl(video.youtubeId)} target="_blank" rel="noopener noreferrer">
+            <IconButton size="small" onClick={() => openYoutubePopup(video.youtubeId, video.artist ? `${video.artist} - ${video.title}` : video.title)}>
               <YouTubeIcon fontSize="small" />
             </IconButton>
           </Tooltip>

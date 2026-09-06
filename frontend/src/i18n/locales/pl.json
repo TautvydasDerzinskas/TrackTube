@@ -260,6 +260,9 @@
       "shuffle": "Losowa kolejność",
       "backToPlaylist": "Wróć do playlisty"
     },
+    "youtubePopup": {
+      "openOnYoutube": "Otwórz na youtube.com"
+    },
     "deleteConfirm": {
       "title": "Usunąć playlistę?",
       "message": "Spowoduje to trwałe usunięcie „{{name}}” i wszystkich pobranych plików. Tej operacji nie można cofnąć."

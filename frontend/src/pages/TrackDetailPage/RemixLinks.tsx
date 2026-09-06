@@ -5,7 +5,8 @@ import {
 import { MusicNote as MusicNoteIcon, YouTube as YouTubeIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { RemixResult } from '../../api/youtube';
-import { formatDuration, youtubeWatchUrl } from '../PlaylistsPage/utils';
+import { formatDuration } from '../PlaylistsPage/utils';
+import { usePlayer } from '../../contexts/PlayerContext';
 
 interface RemixLinksProps {
   state: RemixResult[] | 'loading' | 'error';
@@ -19,6 +20,7 @@ interface RemixLinksProps {
  */
 export function RemixLinks({ state }: RemixLinksProps) {
   const { t } = useTranslation();
+  const { openYoutubePopup } = usePlayer();
 
   if (state === 'loading') {
     return <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}><CircularProgress size={24} /></Box>;
@@ -33,7 +35,7 @@ export function RemixLinks({ state }: RemixLinksProps) {
 
       <List dense disablePadding sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '8px', overflow: 'hidden' }}>
         {state.map((remix) => (
-          <ListItemButton key={remix.id} component="a" href={youtubeWatchUrl(remix.id)} target="_blank" rel="noopener noreferrer"
+          <ListItemButton key={remix.id} onClick={() => openYoutubePopup(remix.id, remix.title)}
             sx={{ borderBottom: 1, borderColor: 'divider', '&:last-of-type': { borderBottom: 'none' } }}>
             <ListItemAvatar sx={{ minWidth: 52 }}>
               <Avatar src={remix.thumbnailUrl ?? undefined} variant="rounded" sx={{ width: 42, height: 30, borderRadius: 1 }}>

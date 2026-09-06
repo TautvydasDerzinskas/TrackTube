@@ -63,6 +63,11 @@ interface PlayerContextType {
   // broadcast (see handleTrackEnded) so a row can tell a fresh bump apart
   // from the same object lingering in context, even if playCount is unchanged.
   justPlayedBump: { videoId: string; playCount: number } | null;
+  // Currently-open "watch on YouTube" floating popup, if any — see
+  // YoutubePopup.tsx (mounted once in AppLayout, same as MiniPlayer).
+  youtubePopup: { videoId: string; title: string } | null;
+  openYoutubePopup: (videoId: string, title: string) => void;
+  closeYoutubePopup: () => void;
 }
 
 const PlayerContext = createContext<PlayerContextType | null>(null);
@@ -85,6 +90,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const [isRepeat, setIsRepeat] = useState(false);
   const [justPlayedBump, setJustPlayedBump] = useState<{ videoId: string; playCount: number } | null>(null);
   const [isShuffle, setIsShuffle] = useState(() => localStorage.getItem(SHUFFLE_STORAGE_KEY) === 'true');
+  const [youtubePopup, setYoutubePopup] = useState<{ videoId: string; title: string } | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const currentRef = useRef(current);
   currentRef.current = current;
@@ -556,6 +562,17 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     playbackStateApi.clear().catch(() => {});
   }, []);
 
+  // Pauses the background track via the native element's own pause() (not
+  // handlePause() directly) so MiniPlayer's onPause wiring updates play
+  // state/the now-playing heartbeat exactly as it would from the mini
+  // player's own pause button — avoids two audio sources playing at once
+  // once the embedded YouTube video starts.
+  const openYoutubePopup = useCallback((videoId: string, title: string) => {
+    audioRef.current?.pause();
+    setYoutubePopup({ videoId, title });
+  }, []);
+  const closeYoutubePopup = useCallback(() => setYoutubePopup(null), []);
+
   // Patches the currently-playing track's own flag in place (rather than
   // relying on a later refetch) so the mini player's heart reflects the
   // toggle immediately, whether it was clicked there or on a track row
@@ -579,6 +596,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     hasNext, hasPrevious, isRepeat, isShuffle, toggleRepeat, toggleShuffle,
     handleTogglePlay, playNext, playPrevious, handleTrackEnded, stopIfPlaylist, handleClosePlayer, toggleFavourite,
     justPlayedBump,
+    youtubePopup, openYoutubePopup, closeYoutubePopup,
   };
 
   return <PlayerContext.Provider value={value}>{children}</PlayerContext.Provider>;
