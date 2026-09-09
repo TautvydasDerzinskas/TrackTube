@@ -48,17 +48,14 @@ export default function DashboardPage() {
           <ArtistCountCard count={summary.totalArtistCount} />
           <GenreCountCard count={summary.totalGenreCount} />
         </Box>
-        <Box sx={{ width: { xs: '100%', md: 0 }, flex: { md: 1.4 } }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: { xs: '100%', md: 0 }, flex: { md: 1.4 } }}>
           <SongsOnRepeatCard songs={summary.topSongs} onSeeMore={() => setShowAllSongs(true)} />
+          <RecentlyAddedCard tracks={summary.recentlyAdded} />
         </Box>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: { xs: '100%', md: 0 }, flex: { md: 1.4 } }}>
           <TopArtistsCard artists={summary.topArtists} onSeeMore={() => setShowAllArtists(true)} />
           <TopGenresCard genres={summary.topGenres} onSeeMore={() => setShowAllGenres(true)} />
         </Box>
-      </Box>
-
-      <Box sx={{ mt: 2 }}>
-        <RecentlyAddedCard tracks={summary.recentlyAdded} />
       </Box>
 
       {showAllSongs && <AllSongsDialog onClose={() => setShowAllSongs(false)} />}

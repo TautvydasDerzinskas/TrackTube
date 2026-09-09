@@ -8,10 +8,10 @@ const router = Router();
 
 router.use(requireAuth);
 
-const TOP_SONGS_PREVIEW = 10;
+const TOP_SONGS_PREVIEW = 5;
 const TOP_ARTISTS_PREVIEW = 10;
 const TOP_GENRES_PREVIEW = 5;
-const RECENTLY_ADDED_PREVIEW = 10;
+const RECENTLY_ADDED_PREVIEW = 3;
 // Defensive ceilings for the "see more" lists — songs are already bounded to
 // ones actually listened to at least once, artists per the product decision
 // to cap this at 20-50 rather than every distinct artist in a large library.
