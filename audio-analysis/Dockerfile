@@ -22,26 +22,40 @@ RUN pip install --no-cache-dir -r requirements.txt
 # not vendoring its own copy of yt-dlp.
 RUN mkdir -p /app/models
 
+# essentia.upf.edu throttles sustained downloads to a crawl after an initial
+# burst (observed: stalls to a few hundred bytes/sec, independent of GH
+# Actions — reproduces from any network). -C - resumes across retries instead
+# of restarting from byte 0 each time, and --speed-limit/--speed-time aborts
+# (and retries) a connection that's stalled rather than hanging indefinitely.
 RUN curl -v \
-    --retry 5 \
+    --retry 20 \
     --retry-delay 5 \
     --retry-all-errors \
+    --speed-limit 512 \
+    --speed-time 30 \
+    -C - \
     -fSL \
     -o /app/models/discogs-effnet-bs64-1.pb \
     https://essentia.upf.edu/models/feature-extractors/discogs-effnet/discogs-effnet-bs64-1.pb
 
 RUN curl -v \
-    --retry 5 \
+    --retry 20 \
     --retry-delay 5 \
     --retry-all-errors \
+    --speed-limit 512 \
+    --speed-time 30 \
+    -C - \
     -fSL \
     -o /app/models/genre_discogs400-discogs-effnet-1.pb \
     https://essentia.upf.edu/models/classification-heads/genre_discogs400/genre_discogs400-discogs-effnet-1.pb
 
 RUN curl -v \
-    --retry 5 \
+    --retry 20 \
     --retry-delay 5 \
     --retry-all-errors \
+    --speed-limit 512 \
+    --speed-time 30 \
+    -C - \
     -fSL \
     -o /app/models/genre_discogs400-discogs-effnet-1.json \
     https://essentia.upf.edu/models/classification-heads/genre_discogs400/genre_discogs400-discogs-effnet-1.json

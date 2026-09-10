@@ -108,7 +108,3 @@ See the Compose files and `.env.example` for available configuration options.
 - **Audio analysis:** Python
 - **Mobile:** React Native / Expo
 - **Deployment:** Docker Compose
-
-## License
-
-See [LICENSE](LICENSE) for license information.
