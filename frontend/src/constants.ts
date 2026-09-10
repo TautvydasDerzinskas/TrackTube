@@ -6,4 +6,4 @@
 // so this URL stays valid across releases with no rebuild needed here. This
 // also decouples the two build pipelines: a frontend-only change no longer
 // needs a fresh Android build just to have something current to embed.
-export const APK_URL = 'https://github.com/TautvydasDerzinskas/youtube-mp3-vault/releases/latest/download/YoutubeVault.apk';
+export const APK_URL = 'https://github.com/TautvydasDerzinskas/TrackTube/releases/latest/download/TrackTube.apk';

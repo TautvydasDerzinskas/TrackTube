@@ -14,11 +14,11 @@
   },
   "mobileGate": {
     "downloadCta": "Atsisiųskite Android programėlę",
-    "description": "Mobilioji patirtis pasiekiama tik per YoutubeVault Android programėlę. Palieskite aukščiau, kad atsisiųstumėte, arba tęskite naršyklėje.",
+    "description": "Mobilioji patirtis pasiekiama tik per TrackTube Android programėlę. Palieskite aukščiau, kad atsisiųstumėte, arba tęskite naršyklėje.",
     "continueOnWeb": "Tęsti naršyklėje"
   },
   "auth": {
-    "appName": "YoutubeVault",
+    "appName": "TrackTube",
     "signIn": "Prisijungti",
     "register": "Registruotis",
     "email": "El. paštas",
@@ -478,7 +478,7 @@
   "downloads": {
     "title": "Atsisiuntimai",
     "downloadCta": "Atsisiųsti Android versiją",
-    "description": "Atsisiųskite YoutubeVault programėlę Android telefonui, kad galėtumėte naršyti grojaraščius ir klausytis neprisijungę."
+    "description": "Atsisiųskite TrackTube programėlę Android telefonui, kad galėtumėte naršyti grojaraščius ir klausytis neprisijungę."
   },
   "settings": {
     "title": "Nustatymai",

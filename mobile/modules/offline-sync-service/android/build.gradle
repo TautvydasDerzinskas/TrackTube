@@ -3,11 +3,11 @@ plugins {
   id 'expo-module-gradle-plugin'
 }
 
-group = 'com.ympv.youtubevault.offlinesyncservice'
+group = 'com.tracktube.offlinesyncservice'
 version = '0.1.0'
 
 android {
-  namespace "com.ympv.youtubevault.offlinesyncservice"
+  namespace "com.tracktube.offlinesyncservice"
   defaultConfig {
     versionCode 1
     versionName "0.1.0"

@@ -28,8 +28,8 @@ export async function sendVerificationEmail(
   await transporter.sendMail({
     from: smtp.from,
     to,
-    subject: 'Confirm your YoutubeVault account',
-    text: `Hi ${displayName},\n\nConfirm your email address to finish creating your YoutubeVault account:\n${link}\n\nThis link expires in 24 hours.`,
-    html: `<p>Hi ${displayName},</p><p>Confirm your email address to finish creating your YoutubeVault account:</p><p><a href="${link}">${link}</a></p><p>This link expires in 24 hours.</p>`,
+    subject: 'Confirm your TrackTube account',
+    text: `Hi ${displayName},\n\nConfirm your email address to finish creating your TrackTube account:\n${link}\n\nThis link expires in 24 hours.`,
+    html: `<p>Hi ${displayName},</p><p>Confirm your email address to finish creating your TrackTube account:</p><p><a href="${link}">${link}</a></p><p>This link expires in 24 hours.</p>`,
   });
 }

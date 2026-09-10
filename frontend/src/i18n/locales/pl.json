@@ -14,11 +14,11 @@
   },
   "mobileGate": {
     "downloadCta": "Pobierz aplikację na Androida",
-    "description": "Doświadczenie mobilne jest dostępne tylko przez aplikację YoutubeVault na Androida. Dotknij powyżej, aby pobrać, albo kontynuuj w przeglądarce.",
+    "description": "Doświadczenie mobilne jest dostępne tylko przez aplikację TrackTube na Androida. Dotknij powyżej, aby pobrać, albo kontynuuj w przeglądarce.",
     "continueOnWeb": "Kontynuuj w przeglądarce"
   },
   "auth": {
-    "appName": "YoutubeVault",
+    "appName": "TrackTube",
     "signIn": "Zaloguj się",
     "register": "Zarejestruj się",
     "email": "E-mail",
@@ -491,7 +491,7 @@
   "downloads": {
     "title": "Pobieranie",
     "downloadCta": "Pobierz na Androida",
-    "description": "Pobierz aplikację YoutubeVault na Androida, aby przeglądać playlisty i słuchać offline na telefonie."
+    "description": "Pobierz aplikację TrackTube na Androida, aby przeglądać playlisty i słuchać offline na telefonie."
   },
   "settings": {
     "title": "Ustawienia",

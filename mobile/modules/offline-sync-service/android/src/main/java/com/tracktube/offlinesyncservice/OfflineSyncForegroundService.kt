@@ -1,4 +1,4 @@
-package com.ympv.youtubevault.offlinesyncservice
+package com.tracktube.offlinesyncservice
 
 import android.app.Notification
 import android.app.NotificationChannel

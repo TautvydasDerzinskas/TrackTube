@@ -2,11 +2,11 @@ import { useState } from 'react';
 import {
   Box,
   Drawer,
-  Typography,
   IconButton,
   Tooltip,
+  useTheme,
 } from '@mui/material';
-import { MusicNote as MusicNoteIcon, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon } from '@mui/icons-material';
+import { ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useNavItems } from './useNavItems';
@@ -21,6 +21,7 @@ interface SidebarProps {
 
 export default function Sidebar({ width }: SidebarProps) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const navigate = useNavigate();
   const navItems = useNavItems();
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === 'true');
@@ -40,7 +41,7 @@ export default function Sidebar({ width }: SidebarProps) {
       sx={{
         width: currentWidth,
         flexShrink: 0,
-        transition: (theme) => theme.transitions.create('width', { duration: theme.transitions.duration.shortest }),
+        transition: (muiTheme) => muiTheme.transitions.create('width', { duration: muiTheme.transitions.duration.shortest }),
         '& .MuiDrawer-paper': {
           width: currentWidth,
           boxSizing: 'border-box',
@@ -48,7 +49,7 @@ export default function Sidebar({ width }: SidebarProps) {
           flexDirection: 'column',
           overflowX: 'hidden',
           borderRight: 'none',
-          transition: (theme) => theme.transitions.create('width', { duration: theme.transitions.duration.shortest }),
+          transition: (muiTheme) => muiTheme.transitions.create('width', { duration: muiTheme.transitions.duration.shortest }),
         },
       }}
     >
@@ -59,15 +60,12 @@ export default function Sidebar({ width }: SidebarProps) {
       >
         {!collapsed && (
           <Box
+            component="img"
+            src={theme.palette.mode === 'dark' ? '/assets/logo-full-dark.svg' : '/assets/logo-full-light.svg'}
+            alt={t('auth.appName')}
             onClick={() => navigate('/dashboard')}
-            sx={{ display: 'flex', alignItems: 'center', gap: 0.75, minWidth: 0, overflow: 'hidden', cursor: 'pointer' }}
-          >
-            <MusicNoteIcon sx={{ color: 'primary.main', fontSize: 26, flexShrink: 0 }} />
-            <Typography variant="subtitle1" fontWeight={900} color="text.primary" noWrap
-              sx={{ fontFamily: '"YoutubeVault", "Inter", "Arial", sans-serif' }}>
-              {t('auth.appName')}
-            </Typography>
-          </Box>
+            sx={{ height: 28, minWidth: 0, cursor: 'pointer' }}
+          />
         )}
         <Tooltip title={collapsed ? t('nav.expandSidebar') : t('nav.collapseSidebar')}>
           <IconButton size="small" onClick={toggleCollapsed} sx={{ flexShrink: 0 }}>

@@ -1,6 +1,6 @@
 {
   "auth": {
-    "appName": "YoutubeVault",
+    "appName": "TrackTube",
     "email": "El. paštas",
     "password": "Slaptažodis",
     "signIn": "Prisijungti",
@@ -414,10 +414,10 @@
     }
   },
   "serverSetup": {
-    "subtitle": "Įveskite savo YoutubeVault serverio adresą, įskaitant prievadą, jei naudojamas nestandartinis.",
+    "subtitle": "Įveskite savo TrackTube serverio adresą, įskaitant prievadą, jei naudojamas nestandartinis.",
     "urlLabel": "Serverio adresas",
     "testConnection": "Tikrinti ryšį",
-    "enterAddress": "Įveskite savo YoutubeVault serverio adresą.",
+    "enterAddress": "Įveskite savo TrackTube serverio adresą.",
     "invalidUrl": "Nurodykite http:// arba https://, ir prievadą, jei serveris naudoja nestandartinį.",
     "serverError": "Serveris grąžino klaidą ({{status}}). Patikrinkite adresą.",
     "unreachable": "Nepavyko pasiekti serverio. Patikrinkite adresą ir interneto ryšį.",
@@ -428,7 +428,7 @@
     "confirm": "Patvirtinti"
   },
   "update": {
-    "available": "Yra naujesnė YoutubeVault versija.",
+    "available": "Yra naujesnė TrackTube versija.",
     "view": "Žiūrėti"
   },
   "network": {

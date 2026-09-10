@@ -33,7 +33,7 @@ export async function switchDatabase(url: string): Promise<void> {
       throw new Error('That database does not exist');
     }
     if (/relation "users" does not exist/i.test(message)) {
-      throw new Error('Connected, but that database has no YoutubeVault tables — point this at an already-migrated instance, not an empty database');
+      throw new Error('Connected, but that database has no TrackTube tables — point this at an already-migrated instance, not an empty database');
     }
     throw new Error('Could not connect to that database — check the values and try again');
   }

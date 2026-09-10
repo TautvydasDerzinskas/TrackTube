@@ -1,6 +1,6 @@
 {
   "auth": {
-    "appName": "YoutubeVault",
+    "appName": "TrackTube",
     "email": "E-mail",
     "password": "Hasło",
     "signIn": "Zaloguj się",
@@ -439,10 +439,10 @@
     }
   },
   "serverSetup": {
-    "subtitle": "Podaj adres swojej usługi YoutubeVault, wraz z portem, jeśli używa niestandardowego.",
+    "subtitle": "Podaj adres swojej usługi TrackTube, wraz z portem, jeśli używa niestandardowego.",
     "urlLabel": "Adres usługi",
     "testConnection": "Testuj połączenie",
-    "enterAddress": "Podaj adres swojej usługi YoutubeVault.",
+    "enterAddress": "Podaj adres swojej usługi TrackTube.",
     "invalidUrl": "Podaj http:// lub https://, oraz port, jeśli serwer używa niestandardowego.",
     "serverError": "Serwer zwrócił błąd ({{status}}). Sprawdź adres.",
     "unreachable": "Nie udało się połączyć z serwerem. Sprawdź adres i połączenie internetowe.",
@@ -453,7 +453,7 @@
     "confirm": "Potwierdź"
   },
   "update": {
-    "available": "Dostępna jest nowsza wersja YoutubeVault.",
+    "available": "Dostępna jest nowsza wersja TrackTube.",
     "view": "Zobacz"
   },
   "network": {

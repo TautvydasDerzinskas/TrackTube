@@ -15,7 +15,7 @@ import { offlineIndex } from './offlineIndex';
 // UIFileSharingEnabled/LSSupportsOpeningDocumentsInPlace) — visible in the
 // Files app, but not auto-discovered by other music apps the way Android's
 // copy is.
-const ANDROID_ALBUM_NAME = 'YoutubeVault';
+const ANDROID_ALBUM_NAME = 'TrackTube';
 export const MAX_CONCURRENT_DOWNLOADS = 3;
 
 function iosPlaylistDir(playlistId: string): Directory {
@@ -200,7 +200,7 @@ export async function removeOfflineTracks(entries: OfflineTrackEntry[]): Promise
 }
 
 // One-time (per app session) cleanup for Android assets that ended up
-// orphaned in the shared YoutubeVault album — mainly an HQ-upgraded track's
+// orphaned in the shared TrackTube album — mainly an HQ-upgraded track's
 // old asset never being deleted (see removeOfflineTracks above). `knownAssetIds`
 // must be the union of the main index's assetIds *and*
 // offlineIndex.getPendingAssetIds() (see the caller in OfflineDownloadsContext,

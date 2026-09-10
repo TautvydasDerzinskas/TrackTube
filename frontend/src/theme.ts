@@ -20,9 +20,9 @@ declare module '@mui/material/styles' {
 // weight a component requests still resolves to it, so an inline
 // fontWeight={700}/{600} layered on a heading variant elsewhere in the app
 // doesn't silently fall back to Inter for lacking an exact-matching face.
-// Swap to 'YoutubeVault ExtraBold' (also self-hosted) for the other weight
+// Swap to 'TrackTube ExtraBold' (also self-hosted) for the other weight
 // the font was purchased in.
-const HEADING_FONT_FAMILY = '"YoutubeVault", "Inter", "Arial", sans-serif';
+const HEADING_FONT_FAMILY = '"TrackTube", "Inter", "Arial", sans-serif';
 
 export type ThemeMode = 'light' | 'dark';
 

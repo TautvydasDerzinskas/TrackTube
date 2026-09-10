@@ -209,11 +209,11 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!current) {
-      document.title = 'YoutubeVault';
+      document.title = 'TrackTube';
       return;
     }
     const { title, artist } = current.video;
-    document.title = `${artist ? `${artist} - ${title}` : title} - YoutubeVault`;
+    document.title = `${artist ? `${artist} - ${title}` : title} - TrackTube`;
   }, [current]);
 
   // Broadcasts "now playing" (see api/nowPlaying.ts) only while genuinely

@@ -365,7 +365,7 @@ router.patch('/settings/smtp', async (req, res, next) => {
       secure: secure === true,
       user: typeof user === 'string' && user.trim() ? user.trim() : null,
       pass: typeof pass === 'string' && pass ? pass : null,
-      from: typeof from === 'string' && from.trim() ? from.trim() : 'YoutubeVault <no-reply@localhost>',
+      from: typeof from === 'string' && from.trim() ? from.trim() : 'TrackTube <no-reply@localhost>',
     };
 
     const updated = await updateSmtpSettings(input);
