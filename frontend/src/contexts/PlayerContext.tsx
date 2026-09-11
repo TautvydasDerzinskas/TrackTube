@@ -42,7 +42,6 @@ interface PlayerContextType {
   setIsAudioPlaying: (playing: boolean) => void;
   handlePause: () => void;
   audioRef: React.RefObject<HTMLAudioElement>;
-  analyserNode: AnalyserNode | null;
   hasNext: boolean;
   hasPrevious: boolean;
   isRepeat: boolean;
@@ -86,7 +85,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const [skipSignal, setSkipSignal] = useState(0);
   const [queue, setQueue] = useState<QueueTrack[]>([]);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
-  const [analyserNode, setAnalyserNode] = useState<AnalyserNode | null>(null);
   const [isRepeat, setIsRepeat] = useState(false);
   const [justPlayedBump, setJustPlayedBump] = useState<{ videoId: string; playCount: number } | null>(null);
   const [isShuffle, setIsShuffle] = useState(() => localStorage.getItem(SHUFFLE_STORAGE_KEY) === 'true');
@@ -103,7 +101,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   isShuffleRef.current = isShuffle;
   const isRepeatRef = useRef(isRepeat);
   isRepeatRef.current = isRepeat;
-  const audioGraphRef = useRef<{ el: HTMLAudioElement; ctx: AudioContext; analyser: AnalyserNode } | null>(null);
   // Set (with the saved seek position) by the restore-on-mount effect just
   // before it calls setCurrent — tells the src-setting effect below to skip
   // autoplay and instead seek once metadata loads, and tells the
@@ -251,36 +248,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTrackKey, isAudioPlaying]);
-
-  const isPlayingSession = Boolean(current);
-  useEffect(() => {
-    if (!isPlayingSession) return;
-    const audioEl = audioRef.current;
-    if (!audioEl) return;
-
-    try {
-      let graph = audioGraphRef.current;
-      if (!graph || graph.el !== audioEl) {
-        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-        if (!AudioContextClass) return;
-        const ctx: AudioContext = new AudioContextClass();
-        const source = ctx.createMediaElementSource(audioEl);
-        const analyser = ctx.createAnalyser();
-        analyser.fftSize = 64;
-        analyser.smoothingTimeConstant = 0.8;
-        source.connect(analyser);
-        analyser.connect(ctx.destination);
-        graph = { el: audioEl, ctx, analyser };
-        audioGraphRef.current = graph;
-      }
-      if (graph.ctx.state === 'suspended') graph.ctx.resume().catch(() => {});
-      setAnalyserNode(graph.analyser);
-    } catch {
-      setAnalyserNode(null);
-    }
-
-    return () => setAnalyserNode(null);
-  }, [isPlayingSession]);
 
   const handleTogglePlay = useCallback((playlistId: string, video: PlaylistVideo, queueOverride?: QueueTrack[]) => {
     const prev = currentRef.current;
@@ -592,7 +559,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     nowPlaying: current ? { playlistId: current.playlistId, videoId: current.video.id, originPath: current.originPath } : null,
     nowPlayingVideo: current?.video,
     skipSignal,
-    isAudioPlaying, setIsAudioPlaying, handlePause, audioRef, analyserNode,
+    isAudioPlaying, setIsAudioPlaying, handlePause, audioRef,
     hasNext, hasPrevious, isRepeat, isShuffle, toggleRepeat, toggleShuffle,
     handleTogglePlay, playNext, playPrevious, handleTrackEnded, stopIfPlaylist, handleClosePlayer, toggleFavourite,
     justPlayedBump,
