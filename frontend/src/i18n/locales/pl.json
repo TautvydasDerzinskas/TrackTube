@@ -408,7 +408,8 @@
     "theme": {
       "label": "Motyw",
       "light": "Jasny",
-      "dark": "Ciemny"
+      "dark": "Ciemny",
+      "system": "Dostosuj do systemu"
     },
     "keyboard": {
       "label": "Klawiatura",

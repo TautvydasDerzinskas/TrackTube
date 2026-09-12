@@ -39,7 +39,7 @@ const authLimiter = rateLimit({
 });
 
 const SUPPORTED_LANGUAGES = ['en', 'lt', 'pl'] as const;
-const SUPPORTED_THEME_MODES = ['light', 'dark'] as const;
+const SUPPORTED_THEME_MODES = ['light', 'dark', 'system'] as const;
 const EMAIL_VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000;
 const RESEND_VERIFICATION_MESSAGE =
   'If an account with that email needs verification, a new email has been sent.';

@@ -395,7 +395,8 @@
     "theme": {
       "label": "Tema",
       "light": "Šviesi",
-      "dark": "Tamsi"
+      "dark": "Tamsi",
+      "system": "Prisitaikyti prie sistemos"
     },
     "keyboard": {
       "label": "Klaviatūra",

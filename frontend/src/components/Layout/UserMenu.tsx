@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { Avatar, Box, Divider, IconButton, ListItemIcon, ListItemText, Menu, MenuItem, Tooltip, Typography } from '@mui/material';
 import { Person as PersonIcon, Settings as SettingsIcon, Palette as PaletteIcon, Check as CheckIcon, Keyboard as KeyboardIcon, Logout as LogoutIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
@@ -38,7 +38,10 @@ interface UserMenuProps {
 // service, each clickable straight to the tab that manages it. Logout also
 // sits inline on the identity row here (one click from anywhere in the app)
 // — kept alongside, not instead of, ProfileHeader.tsx's own Logout button.
-const THEME_MODES = ['light', 'dark'] as const;
+// 'system' is listed after a divider (see the submenu below) since it's a
+// different kind of choice than picking a fixed palette — it delegates to
+// the OS instead (see useSystemThemeMode in AppThemeProvider.tsx).
+const THEME_MODES = ['light', 'dark', 'system'] as const;
 
 export function UserMenu({ avatarSize = 36 }: UserMenuProps) {
   const { t } = useTranslation();
@@ -50,7 +53,9 @@ export function UserMenu({ avatarSize = 36 }: UserMenuProps) {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [themeAnchorEl, setThemeAnchorEl] = useState<HTMLElement | null>(null);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
-  const themeMode = user?.themeMode === 'dark' ? 'dark' : 'light';
+  const themeMode = (THEME_MODES as readonly string[]).includes(user?.themeMode ?? '')
+    ? (user!.themeMode as (typeof THEME_MODES)[number])
+    : 'light';
 
   const closeMenu = () => setAnchorEl(null);
   const closeThemeMenu = () => setThemeAnchorEl(null);
@@ -155,10 +160,13 @@ export function UserMenu({ avatarSize = 36 }: UserMenuProps) {
         transformOrigin={{ vertical: 'top', horizontal: 'left' }}
       >
         {THEME_MODES.map(mode => (
-          <MenuItem key={mode} selected={themeMode === mode} onClick={() => handleThemeSelect(mode)}>
-            <ListItemIcon>{themeMode === mode && <CheckIcon fontSize="small" />}</ListItemIcon>
-            <ListItemText>{t(`profile.theme.${mode}`)}</ListItemText>
-          </MenuItem>
+          <Fragment key={mode}>
+            {mode === 'system' && <Divider />}
+            <MenuItem selected={themeMode === mode} onClick={() => handleThemeSelect(mode)}>
+              <ListItemIcon>{themeMode === mode && <CheckIcon fontSize="small" />}</ListItemIcon>
+              <ListItemText>{t(`profile.theme.${mode}`)}</ListItemText>
+            </MenuItem>
+          </Fragment>
         ))}
       </Menu>
       <KeyboardShortcutsDialog open={keyboardOpen} onClose={() => setKeyboardOpen(false)} />

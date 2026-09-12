@@ -382,7 +382,8 @@
     "theme": {
       "label": "Theme",
       "light": "Light",
-      "dark": "Dark"
+      "dark": "Dark",
+      "system": "Adapt to system"
     },
     "keyboard": {
       "label": "Keyboard",
