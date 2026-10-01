@@ -5,12 +5,19 @@ export interface PersistedQueueEntry {
   videoId: string;
 }
 
+// 'one' loops the current track; 'all' wraps the queue back to its start
+// once the last track ends.
+export type RepeatMode = 'off' | 'one' | 'all';
+
 export interface PlaybackStateDTO {
   playlistId: string;
   videoId: string;
   positionSeconds: number;
   isShuffle: boolean;
-  isRepeat: boolean;
+  repeatMode: RepeatMode;
+  // 0–1. Unlike everything else here it outlives a cleared session — see
+  // get() below.
+  volume: number;
   originPath: string;
   queue: PersistedQueueEntry[];
   history: PersistedQueueEntry[];
@@ -30,9 +37,11 @@ export const playbackStateApi = {
   save: async (state: SavePlaybackStatePayload): Promise<void> => {
     await client.post('/playback-state', state);
   },
-  get: async (): Promise<PlaybackStateDTO | null> => {
-    const { data } = await client.get<{ state: PlaybackStateDTO | null }>('/playback-state');
-    return data.state;
+  // `volume` comes back even when `state` is null (nothing to resume),
+  // since closing the mini player doesn't reset it.
+  get: async (): Promise<{ state: PlaybackStateDTO | null; volume: number }> => {
+    const { data } = await client.get<{ state: PlaybackStateDTO | null; volume: number }>('/playback-state');
+    return data;
   },
   clear: async (): Promise<void> => {
     await client.post('/playback-state/clear');

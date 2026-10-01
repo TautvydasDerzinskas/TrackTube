@@ -5,7 +5,7 @@ import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { playlistsApi, PlaylistVideo } from '../api/youtube';
 import { nowPlayingApi } from '../api/nowPlaying';
-import { playbackStateApi, PersistedQueueEntry } from '../api/playbackState';
+import { playbackStateApi, PersistedQueueEntry, RepeatMode } from '../api/playbackState';
 import { NowPlaying } from '../pages/PlaylistsPage/types';
 import { useToast } from './ToastContext';
 
@@ -27,9 +27,21 @@ const NOW_PLAYING_HEARTBEAT_MS = 25 * 1000;
 // next time the app loads — mirrors mobile's shuffleStorage.ts.
 const SHUFFLE_STORAGE_KEY = 'shuffle_mode';
 
+// Same idea for volume — the local copy just means the right level is there
+// from the first frame; the server copy (see the restore-on-mount effect)
+// is what carries it across browsers.
+const VOLUME_STORAGE_KEY = 'player_volume';
+
+// Volume slider drags fire a change per pixel — only the level it settles
+// on needs to reach the server.
+const VOLUME_SAVE_DEBOUNCE_MS = 500;
+
 // How much Cmd/Ctrl+Up/Down nudges volume per keypress (see the global
 // shortcut effect below) — matches KeyboardShortcutsDialog's documented step.
 const VOLUME_STEP = 0.05;
+
+// Order the repeat button cycles through: off → current track → whole queue → off.
+const NEXT_REPEAT_MODE: Record<RepeatMode, RepeatMode> = { off: 'one', one: 'all', all: 'off' };
 
 interface PlayerContextType {
   nowPlaying: NowPlaying | null;
@@ -44,10 +56,12 @@ interface PlayerContextType {
   audioRef: React.RefObject<HTMLAudioElement>;
   hasNext: boolean;
   hasPrevious: boolean;
-  isRepeat: boolean;
+  repeatMode: RepeatMode;
   isShuffle: boolean;
   toggleRepeat: () => void;
   toggleShuffle: () => void;
+  volume: number;
+  setVolume: (volume: number) => void;
   handleTogglePlay: (playlistId: string, video: PlaylistVideo, queue?: QueueTrack[]) => void;
   playNext: () => void;
   playPrevious: () => void;
@@ -85,22 +99,30 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const [skipSignal, setSkipSignal] = useState(0);
   const [queue, setQueue] = useState<QueueTrack[]>([]);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
-  const [isRepeat, setIsRepeat] = useState(false);
+  const [repeatMode, setRepeatMode] = useState<RepeatMode>('off');
   const [justPlayedBump, setJustPlayedBump] = useState<{ videoId: string; playCount: number } | null>(null);
   const [isShuffle, setIsShuffle] = useState(() => localStorage.getItem(SHUFFLE_STORAGE_KEY) === 'true');
+  const [volume, setVolumeState] = useState(() => {
+    const stored = localStorage.getItem(VOLUME_STORAGE_KEY);
+    const parsed = stored === null ? NaN : Number(stored);
+    return parsed >= 0 && parsed <= 1 ? parsed : 1;
+  });
   const [youtubePopup, setYoutubePopup] = useState<{ videoId: string; title: string } | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const currentRef = useRef(current);
   currentRef.current = current;
-  // Mirror isShuffle/isRepeat into refs (same rationale as currentRef) so
+  // Mirror isShuffle/repeatMode into refs (same rationale as currentRef) so
   // the playbackState save calls sprinkled through this file can always
   // read the latest value without needing to be in every callback's
   // dependency array — keeps those callbacks' identities stable, same as
   // before this feature existed.
   const isShuffleRef = useRef(isShuffle);
   isShuffleRef.current = isShuffle;
-  const isRepeatRef = useRef(isRepeat);
-  isRepeatRef.current = isRepeat;
+  const repeatModeRef = useRef(repeatMode);
+  repeatModeRef.current = repeatMode;
+  const volumeRef = useRef(volume);
+  volumeRef.current = volume;
+  const volumeSaveTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   // Set (with the saved seek position) by the restore-on-mount effect just
   // before it calls setCurrent — tells the src-setting effect below to skip
   // autoplay and instead seek once metadata loads, and tells the
@@ -177,7 +199,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   // once; if there's nothing saved (or the account has never played
   // anything), playbackStateApi.get() resolves to null and this is a no-op.
   useEffect(() => {
-    playbackStateApi.get().then(async (state) => {
+    playbackStateApi.get().then(async ({ state, volume: savedVolume }) => {
+      setVolumeState(savedVolume);
+      localStorage.setItem(VOLUME_STORAGE_KEY, String(savedVolume));
       if (!state) return;
       const { videos } = await playlistsApi.getAllTracks();
       const byId = new Map(videos.map(v => [v.id, v]));
@@ -194,7 +218,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       historyRef.current = hydrate(state.history);
       setQueue(hydrate(state.queue));
       setIsShuffle(state.isShuffle);
-      setIsRepeat(state.isRepeat);
+      setRepeatMode(state.repeatMode ?? 'off');
       localStorage.setItem(SHUFFLE_STORAGE_KEY, String(state.isShuffle));
       isRestoringRef.current = true;
       restorePositionRef.current = state.positionSeconds;
@@ -230,14 +254,14 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     if (!current || !isAudioPlaying) return;
     const { playlistId, video, originPath } = current;
     // Also saves the resume position on the same cadence — reuses this
-    // interval rather than adding a second one. Reads isShuffle/isRepeat via
+    // interval rather than adding a second one. Reads isShuffle/repeatMode via
     // ref (not as effect deps) so toggling either mid-playback doesn't tear
     // down and restart this interval (and the nowPlaying broadcast with it).
     const heartbeat = () => {
       nowPlayingApi.set(playlistId, video.id).catch(() => {});
       playbackStateApi.save({
         playlistId, videoId: video.id, positionSeconds: audioRef.current?.currentTime ?? 0,
-        isShuffle: isShuffleRef.current, isRepeat: isRepeatRef.current, originPath,
+        isShuffle: isShuffleRef.current, repeatMode: repeatModeRef.current, volume: volumeRef.current, originPath,
       }).catch(() => {});
     };
     heartbeat();
@@ -272,7 +296,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     const saveSession = (sessionQueue: QueueTrack[]) => {
       playbackStateApi.save({
         playlistId, videoId: video.id, positionSeconds: 0,
-        isShuffle: isShuffleRef.current, isRepeat: isRepeatRef.current, originPath,
+        isShuffle: isShuffleRef.current, repeatMode: repeatModeRef.current, volume: volumeRef.current, originPath,
         queue: sessionQueue.map((v): PersistedQueueEntry => ({ playlistId: v.playlistId ?? playlistId, videoId: v.id })),
         history: [],
       }).catch(() => {});
@@ -296,12 +320,14 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   // Shuffle can always jump to *some* other track as long as one exists;
   // "previous" instead depends on whether there's any session history to
   // step back through, since shuffle order isn't just position ± 1.
-  const hasNext = isShuffle ? queue.length > 1 : (currentIndex >= 0 && currentIndex < queue.length - 1);
-  const hasPrevious = isShuffle ? historyRef.current.length > 0 : currentIndex > 0;
+  // Repeat-all wraps sequential mode around both ends of the queue.
+  const wraps = repeatMode === 'all' && currentIndex >= 0 && queue.length > 1;
+  const hasNext = isShuffle ? queue.length > 1 : (wraps || (currentIndex >= 0 && currentIndex < queue.length - 1));
+  const hasPrevious = isShuffle ? historyRef.current.length > 0 : (wraps || currentIndex > 0);
 
   // Shared by playNext and handleTrackEnded — sequential mode is just
-  // idx+1; shuffle mode picks uniformly at random from every other track in
-  // the queue.
+  // idx+1 (wrapping to the first track under repeat-all); shuffle mode picks
+  // uniformly at random from every other track in the queue.
   const pickNextTrack = useCallback((fromVideo: PlaylistVideo): QueueTrack | undefined => {
     if (isShuffle) {
       const candidates = queue.filter(v => v.id !== fromVideo.id);
@@ -309,8 +335,10 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       return candidates[Math.floor(Math.random() * candidates.length)];
     }
     const idx = queue.findIndex(v => v.id === fromVideo.id);
-    return idx >= 0 ? queue[idx + 1] : undefined;
-  }, [queue, isShuffle]);
+    if (idx < 0) return undefined;
+    if (repeatMode === 'all' && queue.length > 1) return queue[(idx + 1) % queue.length];
+    return queue[idx + 1];
+  }, [queue, isShuffle, repeatMode]);
 
   // playNext/playPrevious read currentRef.current directly (rather than a
   // setCurrent functional updater) so the playbackState save below — which
@@ -328,7 +356,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     setSkipSignal(s => s + 1);
     playbackStateApi.save({
       playlistId, videoId: next.id, positionSeconds: 0,
-      isShuffle: isShuffleRef.current, isRepeat: isRepeatRef.current, originPath: prev.originPath,
+      isShuffle: isShuffleRef.current, repeatMode: repeatModeRef.current, volume: volumeRef.current, originPath: prev.originPath,
       history: historyRef.current.map((v): PersistedQueueEntry => ({ playlistId: v.playlistId ?? playlistId, videoId: v.id })),
     }).catch(() => {});
   }, [pickNextTrack]);
@@ -344,7 +372,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       historyRef.current = history.slice(0, -1);
     } else {
       const idx = queue.findIndex(v => v.id === prev.video.id);
-      target = idx > 0 ? queue[idx - 1] : undefined;
+      if (repeatMode === 'all' && idx >= 0 && queue.length > 1) target = queue[(idx - 1 + queue.length) % queue.length];
+      else target = idx > 0 ? queue[idx - 1] : undefined;
     }
     if (!target) return;
     const playlistId = target.playlistId ?? prev.playlistId;
@@ -352,10 +381,10 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     setSkipSignal(s => s + 1);
     playbackStateApi.save({
       playlistId, videoId: target.id, positionSeconds: 0,
-      isShuffle: isShuffleRef.current, isRepeat: isRepeatRef.current, originPath: prev.originPath,
+      isShuffle: isShuffleRef.current, repeatMode: repeatModeRef.current, volume: volumeRef.current, originPath: prev.originPath,
       history: historyRef.current.map((v): PersistedQueueEntry => ({ playlistId: v.playlistId ?? playlistId, videoId: v.id })),
     }).catch(() => {});
-  }, [queue, isShuffle]);
+  }, [queue, isShuffle, repeatMode]);
 
   const handleTrackEnded = useCallback(() => {
     const prev = currentRef.current;
@@ -366,10 +395,12 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         .catch(() => {});
     }
 
-    // Repeat loops the same track — restart it directly rather than
+    // Repeat-one loops the same track — restart it directly rather than
     // advancing `current` (which isn't changing, so the src-setting effect
-    // above wouldn't fire again on its own).
-    if (isRepeat) {
+    // above wouldn't fire again on its own). Repeat-all does the same when
+    // the queue is just this one track, since there's nothing to wrap to.
+    const next = prev ? pickNextTrack(prev.video) : undefined;
+    if (repeatMode === 'one' || (repeatMode === 'all' && prev && !next)) {
       const audioEl = audioRef.current;
       if (audioEl) {
         audioEl.currentTime = 0;
@@ -378,14 +409,13 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       if (prev) {
         playbackStateApi.save({
           playlistId: prev.playlistId, videoId: prev.video.id, positionSeconds: 0,
-          isShuffle: isShuffleRef.current, isRepeat: isRepeatRef.current, originPath: prev.originPath,
+          isShuffle: isShuffleRef.current, repeatMode: repeatModeRef.current, volume: volumeRef.current, originPath: prev.originPath,
         }).catch(() => {});
       }
       return;
     }
 
     if (!prev) return;
-    const next = pickNextTrack(prev.video);
     if (!next) {
       // Queue exhausted, nothing next — playback genuinely ends, so clear
       // the persisted state too rather than leaving a stale resume point.
@@ -398,19 +428,19 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     setCurrent({ playlistId, video: next, originPath: prev.originPath });
     playbackStateApi.save({
       playlistId, videoId: next.id, positionSeconds: 0,
-      isShuffle: isShuffleRef.current, isRepeat: isRepeatRef.current, originPath: prev.originPath,
+      isShuffle: isShuffleRef.current, repeatMode: repeatModeRef.current, volume: volumeRef.current, originPath: prev.originPath,
       history: historyRef.current.map((v): PersistedQueueEntry => ({ playlistId: v.playlistId ?? playlistId, videoId: v.id })),
     }).catch(() => {});
-  }, [isRepeat, pickNextTrack]);
+  }, [repeatMode, pickNextTrack]);
 
-  const toggleRepeat = useCallback(() => setIsRepeat(v => {
-    const next = !v;
+  const toggleRepeat = useCallback(() => setRepeatMode(v => {
+    const next = NEXT_REPEAT_MODE[v];
     const cur = currentRef.current;
     if (cur) {
       playbackStateApi.save({
         playlistId: cur.playlistId, videoId: cur.video.id,
         positionSeconds: audioRef.current?.currentTime ?? 0,
-        isShuffle: isShuffleRef.current, isRepeat: next, originPath: cur.originPath,
+        isShuffle: isShuffleRef.current, repeatMode: next, volume: volumeRef.current, originPath: cur.originPath,
       }).catch(() => {});
     }
     return next;
@@ -423,11 +453,30 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       playbackStateApi.save({
         playlistId: cur.playlistId, videoId: cur.video.id,
         positionSeconds: audioRef.current?.currentTime ?? 0,
-        isShuffle: next, isRepeat: isRepeatRef.current, originPath: cur.originPath,
+        isShuffle: next, repeatMode: repeatModeRef.current, volume: volumeRef.current, originPath: cur.originPath,
       }).catch(() => {});
     }
     return next;
   }), []);
+
+  const setVolume = useCallback((v: number) => {
+    const next = Math.min(1, Math.max(0, v));
+    // Updated eagerly (not just on the next render) so back-to-back
+    // keyboard nudges and the debounced save below see the newest value.
+    volumeRef.current = next;
+    setVolumeState(next);
+    localStorage.setItem(VOLUME_STORAGE_KEY, String(next));
+    clearTimeout(volumeSaveTimeoutRef.current);
+    volumeSaveTimeoutRef.current = setTimeout(() => {
+      const cur = currentRef.current;
+      if (!cur) return;
+      playbackStateApi.save({
+        playlistId: cur.playlistId, videoId: cur.video.id,
+        positionSeconds: audioRef.current?.currentTime ?? 0,
+        isShuffle: isShuffleRef.current, repeatMode: repeatModeRef.current, volume: volumeRef.current, originPath: cur.originPath,
+      }).catch(() => {});
+    }, VOLUME_SAVE_DEBOUNCE_MS);
+  }, []);
 
   // Saves the exact pause position deterministically (unlike leaning on the
   // heartbeat effect's cleanup, whose timing relative to the src-setting
@@ -442,7 +491,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       playbackStateApi.save({
         playlistId: cur.playlistId, videoId: cur.video.id,
         positionSeconds: audioRef.current?.currentTime ?? 0,
-        isShuffle: isShuffleRef.current, isRepeat: isRepeatRef.current, originPath: cur.originPath,
+        isShuffle: isShuffleRef.current, repeatMode: repeatModeRef.current, volume: volumeRef.current, originPath: cur.originPath,
       }).catch(() => {});
     }
   }, []);
@@ -457,7 +506,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       const payload = {
         playlistId: cur.playlistId, videoId: cur.video.id,
         positionSeconds: audioRef.current?.currentTime ?? 0,
-        isShuffle: isShuffleRef.current, isRepeat: isRepeatRef.current, originPath: cur.originPath,
+        isShuffle: isShuffleRef.current, repeatMode: repeatModeRef.current, volume: volumeRef.current, originPath: cur.originPath,
       };
       navigator.sendBeacon('/api/playback-state', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
     };
@@ -495,11 +544,11 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
           break;
         case 'ArrowUp':
           e.preventDefault();
-          if (audioRef.current) audioRef.current.volume = Math.min(1, audioRef.current.volume + VOLUME_STEP);
+          setVolume(volumeRef.current + VOLUME_STEP);
           break;
         case 'ArrowDown':
           e.preventDefault();
-          if (audioRef.current) audioRef.current.volume = Math.max(0, audioRef.current.volume - VOLUME_STEP);
+          setVolume(volumeRef.current - VOLUME_STEP);
           break;
         case 's':
         case 'S':
@@ -513,7 +562,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [playNext, playPrevious, toggleShuffle]);
+  }, [playNext, playPrevious, toggleShuffle, setVolume]);
 
   const stopIfPlaylist = useCallback((playlistId: string) => {
     setCurrent(prev => {
@@ -560,7 +609,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     nowPlayingVideo: current?.video,
     skipSignal,
     isAudioPlaying, setIsAudioPlaying, handlePause, audioRef,
-    hasNext, hasPrevious, isRepeat, isShuffle, toggleRepeat, toggleShuffle,
+    hasNext, hasPrevious, repeatMode, isShuffle, toggleRepeat, toggleShuffle, volume, setVolume,
     handleTogglePlay, playNext, playPrevious, handleTrackEnded, stopIfPlaylist, handleClosePlayer, toggleFavourite,
     justPlayedBump,
     youtubePopup, openYoutubePopup, closeYoutubePopup,

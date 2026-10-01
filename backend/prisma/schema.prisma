@@ -69,7 +69,12 @@ model User {
   playbackVideoId           String?
   playbackPositionSeconds   Float?
   playbackIsShuffle         Boolean    @default(false)
-  playbackIsRepeat          Boolean    @default(false)
+  // 'off' | 'one' (repeat current track) | 'all' (loop the whole queue).
+  playbackRepeatMode        String     @default("off")
+  // Mini player volume (0–1). A listening preference rather than part of
+  // the resumable session, so unlike the fields around it it survives
+  // /playback-state/clear and is returned even when there's no session.
+  playbackVolume            Float      @default(1)
   playbackOriginPath        String?
   // Ordered array of { playlistId, videoId } pairs — the exact queue as of
   // session start, so "All Tracks"/shuffled sessions resume with next/prev

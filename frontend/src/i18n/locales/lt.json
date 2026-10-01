@@ -252,7 +252,9 @@
       "volumeAmbient": "Foninis",
       "volumeRegular": "Įprastas",
       "volumeParty": "Vakarėlis",
-      "repeat": "Kartoti dabartinę dainą",
+      "repeat": "Kartoti",
+      "repeatOne": "Kartoti dabartinę dainą",
+      "repeatAll": "Kartoti grojaraštį",
       "shuffle": "Maišyti",
       "backToPlaylist": "Grįžti į grojaraštį"
     },

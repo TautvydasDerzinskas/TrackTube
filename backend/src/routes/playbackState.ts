@@ -9,6 +9,7 @@ const router = Router();
 // a pathological/buggy payload from writing an unbounded JSON blob.
 const MAX_QUEUE_LENGTH = 5000;
 const MAX_HISTORY_LENGTH = 50;
+const REPEAT_MODES = ['off', 'one', 'all'];
 
 interface QueueEntry {
   playlistId: string;
@@ -23,7 +24,8 @@ function isQueueEntry(v: unknown): v is QueueEntry {
   );
 }
 
-// POST /api/playback-state — upsert. `queue`/`history` are optional on every
+// POST /api/playback-state — upsert. `volume` is optional (left untouched
+// when omitted, same as queue/history below). `queue`/`history` are optional on every
 // call: heartbeat/track-advance/toggle writes omit them so they don't need
 // to resend a potentially large queue — Prisma's update skips any key left
 // `undefined` in `data`, so the previously stored value is left untouched.
@@ -31,16 +33,21 @@ router.post('/', requireAuth, async (req: AuthRequest, res, next) => {
   try {
     const body = req.body as {
       playlistId?: unknown; videoId?: unknown; positionSeconds?: unknown;
-      isShuffle?: unknown; isRepeat?: unknown; originPath?: unknown;
+      isShuffle?: unknown; repeatMode?: unknown; volume?: unknown; originPath?: unknown;
       queue?: unknown; history?: unknown;
     };
-    const { playlistId, videoId, positionSeconds, isShuffle, isRepeat, originPath } = body;
+    const { playlistId, videoId, positionSeconds, isShuffle, repeatMode, volume, originPath } = body;
     if (
       typeof playlistId !== 'string' || typeof videoId !== 'string' ||
       typeof positionSeconds !== 'number' || typeof isShuffle !== 'boolean' ||
-      typeof isRepeat !== 'boolean' || typeof originPath !== 'string'
+      typeof repeatMode !== 'string' || !REPEAT_MODES.includes(repeatMode) ||
+      typeof originPath !== 'string'
     ) {
-      res.status(400).json({ error: 'playlistId, videoId, positionSeconds, isShuffle, isRepeat and originPath are required' });
+      res.status(400).json({ error: 'playlistId, videoId, positionSeconds, isShuffle, repeatMode (off | one | all) and originPath are required' });
+      return;
+    }
+    if (volume !== undefined && (typeof volume !== 'number' || !(volume >= 0 && volume <= 1))) {
+      res.status(400).json({ error: 'volume must be a number between 0 and 1' });
       return;
     }
 
@@ -57,14 +64,15 @@ router.post('/', requireAuth, async (req: AuthRequest, res, next) => {
 
     const data: {
       playbackPlaylistId: string; playbackVideoId: string; playbackPositionSeconds: number;
-      playbackIsShuffle: boolean; playbackIsRepeat: boolean; playbackOriginPath: string;
+      playbackIsShuffle: boolean; playbackRepeatMode: string; playbackVolume?: number; playbackOriginPath: string;
       playbackUpdatedAt: Date; playbackQueue?: Prisma.InputJsonValue; playbackHistory?: Prisma.InputJsonValue;
     } = {
       playbackPlaylistId: playlistId,
       playbackVideoId: videoId,
       playbackPositionSeconds: positionSeconds,
       playbackIsShuffle: isShuffle,
-      playbackIsRepeat: isRepeat,
+      playbackRepeatMode: repeatMode,
+      playbackVolume: volume as number | undefined,
       playbackOriginPath: originPath,
       playbackUpdatedAt: new Date(),
     };
@@ -95,20 +103,22 @@ router.post('/', requireAuth, async (req: AuthRequest, res, next) => {
 });
 
 // GET /api/playback-state — the persisted resume point, or { state: null }
-// once nothing's been saved (or it was explicitly cleared).
+// once nothing's been saved (or it was explicitly cleared). `volume` is
+// always returned alongside, since clearing the session doesn't reset it.
 router.get('/', requireAuth, async (req: AuthRequest, res, next) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.userId },
       select: {
         playbackPlaylistId: true, playbackVideoId: true, playbackPositionSeconds: true,
-        playbackIsShuffle: true, playbackIsRepeat: true, playbackOriginPath: true,
+        playbackIsShuffle: true, playbackRepeatMode: true, playbackVolume: true, playbackOriginPath: true,
         playbackQueue: true, playbackHistory: true,
       },
     });
 
+    const volume = user?.playbackVolume ?? 1;
     if (!user?.playbackVideoId || !user.playbackPlaylistId) {
-      res.json({ state: null });
+      res.json({ state: null, volume });
       return;
     }
 
@@ -118,11 +128,12 @@ router.get('/', requireAuth, async (req: AuthRequest, res, next) => {
         videoId: user.playbackVideoId,
         positionSeconds: user.playbackPositionSeconds ?? 0,
         isShuffle: user.playbackIsShuffle,
-        isRepeat: user.playbackIsRepeat,
+        repeatMode: user.playbackRepeatMode,
         originPath: user.playbackOriginPath ?? '/playlists',
         queue: user.playbackQueue ?? [],
         history: user.playbackHistory ?? [],
       },
+      volume,
     });
   } catch (err) {
     next(err);
@@ -138,7 +149,7 @@ router.post('/clear', requireAuth, async (req: AuthRequest, res, next) => {
       where: { id: req.userId },
       data: {
         playbackPlaylistId: null, playbackVideoId: null, playbackPositionSeconds: null,
-        playbackIsShuffle: false, playbackIsRepeat: false, playbackOriginPath: null,
+        playbackIsShuffle: false, playbackRepeatMode: 'off', playbackOriginPath: null,
         playbackQueue: Prisma.JsonNull, playbackHistory: [], playbackUpdatedAt: null,
       },
     });

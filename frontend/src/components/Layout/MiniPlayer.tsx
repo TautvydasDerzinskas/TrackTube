@@ -10,6 +10,7 @@ import {
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useIsMobile } from '../../hooks/useIsMobile';
+import { RepeatMode } from '../../api/playbackState';
 
 interface MiniPlayerProps {
   title: string | undefined;
@@ -21,8 +22,10 @@ interface MiniPlayerProps {
   isAudioPlaying: boolean;
   hasNext: boolean;
   hasPrevious: boolean;
-  isRepeat: boolean;
+  repeatMode: RepeatMode;
   isShuffle: boolean;
+  volume: number;
+  onVolumeChange: (volume: number) => void;
   onPlay: () => void;
   onPause: () => void;
   onEnded: () => void;
@@ -53,23 +56,18 @@ const VOLUME_PRESETS = [
 ] as const;
 
 export function MiniPlayer({
-  title, artist, thumbnailUrl, isFavourite, onToggleFavourite, audioRef, isAudioPlaying, hasNext, hasPrevious, isRepeat, isShuffle,
+  title, artist, thumbnailUrl, isFavourite, onToggleFavourite, audioRef, isAudioPlaying, hasNext, hasPrevious, repeatMode, isShuffle, volume, onVolumeChange,
   onPlay, onPause, onEnded, onNext, onPrevious, onToggleRepeat, onToggleShuffle, onClose, onTitleClick,
 }: MiniPlayerProps) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  // Mirrors audioEl.volume — kept in sync below via the native
-  // 'volumechange' event, so it stays correct whether it was changed here
-  // (the popover slider) or elsewhere (e.g. PlayerContext's Cmd/Ctrl+Up/Down
-  // shortcut, which sets audioEl.volume directly).
-  const [volume, setVolume] = useState(1);
   const [volumeAnchorEl, setVolumeAnchorEl] = useState<HTMLElement | null>(null);
 
   // The <audio> element itself is native and unstyled (see the hidden
-  // element rendered below) — this mirrors its currentTime/duration/volume
-  // onto state so the custom scrubber/volume slider below can render them.
+  // element rendered below) — this mirrors its currentTime/duration onto
+  // state so the custom scrubber below can render them.
   // Re-binds whenever the mobile/desktop layout swap remounts the
   // underlying <audio> node (each layout renders its own, sharing the same
   // ref).
@@ -78,21 +76,23 @@ export function MiniPlayer({
     if (!audioEl) return;
     const updateTime = () => setCurrentTime(audioEl.currentTime);
     const updateDuration = () => setDuration(audioEl.duration || 0);
-    const updateVolume = () => setVolume(audioEl.muted ? 0 : audioEl.volume);
     updateTime();
     updateDuration();
-    updateVolume();
     audioEl.addEventListener('timeupdate', updateTime);
     audioEl.addEventListener('durationchange', updateDuration);
     audioEl.addEventListener('loadedmetadata', updateDuration);
-    audioEl.addEventListener('volumechange', updateVolume);
     return () => {
       audioEl.removeEventListener('timeupdate', updateTime);
       audioEl.removeEventListener('durationchange', updateDuration);
       audioEl.removeEventListener('loadedmetadata', updateDuration);
-      audioEl.removeEventListener('volumechange', updateVolume);
     };
   }, [audioRef, isMobile]);
+
+  // Volume lives in PlayerContext (persisted across sessions) — push it
+  // onto the <audio> element, including a fresh one after a layout swap.
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.volume = volume;
+  }, [audioRef, isMobile, volume]);
 
   const handlePlayPauseClick = () => {
     const audioEl = audioRef.current;
@@ -107,16 +107,8 @@ export function MiniPlayer({
     if (audioRef.current) audioRef.current.currentTime = time;
   };
 
-  const applyVolume = (v: number) => {
-    setVolume(v);
-    if (audioRef.current) {
-      audioRef.current.volume = v;
-      audioRef.current.muted = false;
-    }
-  };
-
   const handleVolumeChange = (_event: Event, value: number | number[]) => {
-    applyVolume((Array.isArray(value) ? value[0] : value) / 100);
+    onVolumeChange((Array.isArray(value) ? value[0] : value) / 100);
   };
 
   const thumbnail = (
@@ -158,10 +150,21 @@ export function MiniPlayer({
       </IconButton>
     </Tooltip>
   );
+  const repeatTooltipKey = { off: 'repeat', one: 'repeatOne', all: 'repeatAll' }[repeatMode];
   const repeatButton = (
-    <Tooltip title={t('playlists.miniPlayer.repeat')}>
-      <IconButton size="small" onClick={onToggleRepeat} sx={{ flexShrink: 0, color: isRepeat ? 'primary.main' : undefined }}>
-        <RepeatIcon fontSize="small" />
+    <Tooltip title={t(`playlists.miniPlayer.${repeatTooltipKey}`)}>
+      <IconButton size="small" onClick={onToggleRepeat} sx={{ flexShrink: 0, color: repeatMode !== 'off' ? 'primary.main' : undefined }}>
+        <Box sx={{ position: 'relative', display: 'flex' }}>
+          <RepeatIcon fontSize="small" />
+          {repeatMode === 'one' && (
+            <Box sx={{
+              position: 'absolute', top: -5, right: -6, width: 12, height: 12, borderRadius: '50%',
+              bgcolor: 'primary.main', color: '#fff', fontSize: 9, fontWeight: 700, lineHeight: '12px', textAlign: 'center',
+            }}>
+              1
+            </Box>
+          )}
+        </Box>
       </IconButton>
     </Tooltip>
   );
@@ -226,7 +229,7 @@ export function MiniPlayer({
                   size="small"
                   variant={active ? 'filled' : 'outlined'}
                   color={active ? 'primary' : 'default'}
-                  onClick={() => applyVolume(value)}
+                  onClick={() => onVolumeChange(value)}
                 />
               );
             })}

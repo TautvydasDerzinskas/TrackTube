@@ -256,7 +256,9 @@
       "volumeAmbient": "W tle",
       "volumeRegular": "Standardowy",
       "volumeParty": "Impreza",
-      "repeat": "Powtarzaj bieżący utwór",
+      "repeat": "Powtarzaj",
+      "repeatOne": "Powtarzaj bieżący utwór",
+      "repeatAll": "Powtarzaj playlistę",
       "shuffle": "Losowa kolejność",
       "backToPlaylist": "Wróć do playlisty"
     },

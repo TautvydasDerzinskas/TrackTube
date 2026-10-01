@@ -248,7 +248,9 @@
       "volumeAmbient": "Ambient",
       "volumeRegular": "Regular",
       "volumeParty": "Party",
-      "repeat": "Repeat current song",
+      "repeat": "Repeat",
+      "repeatOne": "Repeat current song",
+      "repeatAll": "Repeat playlist",
       "shuffle": "Shuffle",
       "backToPlaylist": "Back to playlist"
     },
