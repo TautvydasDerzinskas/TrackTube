@@ -327,6 +327,16 @@ export const playlistsApi = {
     await client.delete(`/playlists/${playlistId}/videos/${videoId}`);
   },
 
+  // Adds/removes a track (by youtubeId — the same track across playlists)
+  // to/from one of the user's own 'created' playlists. Idempotent either way.
+  addTrackToPlaylist: async (playlistId: string, youtubeId: string): Promise<void> => {
+    await client.put(`/playlists/${playlistId}/tracks/${encodeURIComponent(youtubeId)}`);
+  },
+
+  removeTrackFromPlaylist: async (playlistId: string, youtubeId: string): Promise<void> => {
+    await client.delete(`/playlists/${playlistId}/tracks/${encodeURIComponent(youtubeId)}`);
+  },
+
   toggleFavourite: async (playlistId: string, videoId: string): Promise<{ isFavourite: boolean }> => {
     const { data } = await client.post<{ isFavourite: boolean }>(`/playlists/${playlistId}/videos/${videoId}/favourite`);
     return data;

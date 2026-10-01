@@ -243,6 +243,16 @@
         "confirmMessage": "Zmienić nazwę tego utworu na \"{{name}}\"? Wyszukiwanie HQ zostanie uruchomione ponownie pod nową nazwą.",
         "preview": "Odtwórz podgląd",
         "stopPreview": "Zatrzymaj podgląd"
+      },
+      "addToPlaylist": "Dodaj do playlisty",
+      "addToPlaylistDialog": {
+        "title": "Dodaj do playlisty",
+        "hint": "Kliknij playlistę, aby dodać lub usunąć „{{title}}”.",
+        "empty": "Nie masz jeszcze żadnych utworzonych playlist.",
+        "failedToLoad": "Nie udało się załadować playlist.",
+        "added": "Dodano do {{name}}",
+        "removed": "Usunięto z {{name}}",
+        "error": "Nie udało się zaktualizować {{name}}"
       }
     },
     "miniPlayer": {

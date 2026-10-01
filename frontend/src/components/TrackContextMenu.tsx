@@ -3,7 +3,7 @@ import { Menu, MenuItem, ListItemIcon, ListItemText, Divider } from '@mui/materi
 import {
   Edit as EditIcon, DeleteOutline as DeleteIcon, HighQuality as ScanHqIcon,
   YouTube as YouTubeIcon, Download as DownloadIcon,
-  Favorite as FavoriteIcon, FavoriteBorder as FavoriteBorderIcon,
+  Favorite as FavoriteIcon, FavoriteBorder as FavoriteBorderIcon, PlaylistAdd as PlaylistAddIcon,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { playlistsApi, PlaylistVideo } from '../api/youtube';
@@ -11,6 +11,7 @@ import { useToast } from '../contexts/ToastContext';
 import { usePlayer } from '../contexts/PlayerContext';
 import { ConfirmDialog } from './ConfirmDialog';
 import { RenameTrackDialog } from './RenameTrackDialog';
+import { AddToPlaylistDialog } from './AddToPlaylistDialog';
 
 interface TrackContextMenuProps {
   playlistId: string;
@@ -48,6 +49,7 @@ export function TrackContextMenu({ playlistId, video, position, onClose, onDelet
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [renaming, setRenaming] = useState(false);
+  const [addingToPlaylist, setAddingToPlaylist] = useState(false);
 
   // Search for HQ is only pointless once the file is actually downloaded —
   // "found but not downloaded" (betterQualityExists) means a past pass
@@ -107,6 +109,10 @@ export function TrackContextMenu({ playlistId, video, position, onClose, onDelet
           <ListItemIcon>{video.isFavourite ? <FavoriteIcon fontSize="small" /> : <FavoriteBorderIcon fontSize="small" />}</ListItemIcon>
           <ListItemText>{t(video.isFavourite ? 'playlists.videoList.removeFavourite' : 'playlists.videoList.addFavourite')}</ListItemText>
         </MenuItem>
+        <MenuItem onClick={() => { onClose(); setAddingToPlaylist(true); }}>
+          <ListItemIcon><PlaylistAddIcon fontSize="small" /></ListItemIcon>
+          <ListItemText>{t('playlists.videoList.addToPlaylist')}</ListItemText>
+        </MenuItem>
         <Divider />
         <MenuItem onClick={() => { onClose(); openYoutubePopup(video.youtubeId, video.artist ? `${video.artist} - ${video.title}` : video.title); }}>
           <ListItemIcon><YouTubeIcon fontSize="small" /></ListItemIcon>
@@ -128,6 +134,14 @@ export function TrackContextMenu({ playlistId, video, position, onClose, onDelet
           loading={deleting}
           onConfirm={handleConfirmDelete}
           onCancel={() => setConfirming(false)}
+        />
+      )}
+      {addingToPlaylist && (
+        <AddToPlaylistDialog
+          playlistId={playlistId}
+          video={video}
+          onClose={() => setAddingToPlaylist(false)}
+          onRemovedFromCurrent={onDeleted}
         />
       )}
       {renaming && (

@@ -19,6 +19,7 @@ import {
   mediaFilesUsedBy,
   cleanupMediaFiles,
   deleteTrackEverywhere,
+  removePlaylistVideo,
 } from '../services/syncService';
 import { isTrackBusy, startTrackHqSearch, startTrackRename, getCloseHqCandidates, dismissCloseHqCandidates } from '../services/slskdQualityWorker';
 import { startGeneratePlaylist } from '../services/playlistGenerator';
@@ -896,6 +897,108 @@ router.get('/:id/videos/:videoId/used-in', requireAuth, async (req: AuthRequest,
     }));
 
     res.json({ usedIn });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── PUT/DELETE /api/playlists/:id/tracks/:youtubeId — "Add to playlist" ─────
+// Lets a track the user already has (in any of their playlists) be added to,
+// or removed from, one of their own 'created' playlists — the only kind
+// whose contents are theirs to edit (imported ones mirror YouTube,
+// generated ones are rebuilt from their source). Keyed by youtubeId rather
+// than a playlist_video id since that's what "the same track" means across
+// playlists (see GET .../used-in above), and the row this was opened from
+// may itself be the one being removed.
+
+// Columns copied from the user's existing copy of the track onto the new
+// row — same reuse idea as playlistCreator.ts's toResolvedTrack, so an added
+// track keeps its enrichment (and its downloaded file, if it has one)
+// instead of starting the metadata/analysis/download pipeline over.
+const ADD_TO_PLAYLIST_COPY_SELECT = {
+  youtubeId: true, title: true, originalTitle: true, duration: true, thumbnailUrl: true, channelName: true,
+  artist: true, album: true, trackNumber: true, releaseYear: true, mbRecordingId: true, genres: true,
+  metadataStatus: true, metadataFetchedAt: true, audioAnalysisStatus: true, audioAnalysisFetchedAt: true,
+  betterQualityExists: true, qualityCheckStatus: true, qualityCheckedAt: true, hqFileDownloaded: true,
+  isFavourite: true, downloadStatus: true, mediaFileId: true, fileSize: true, bitrate: true,
+} as const;
+
+async function findEditablePlaylist(playlistId: string, userId: string | undefined) {
+  return prisma.playlist.findFirst({ where: { id: playlistId, userId, origin: 'created' } });
+}
+
+router.put('/:id/tracks/:youtubeId', requireAuth, async (req: AuthRequest, res, next) => {
+  try {
+    const playlist = await findEditablePlaylist(req.params.id, req.userId);
+    if (!playlist) {
+      res.status(404).json({ error: 'Playlist not found' });
+      return;
+    }
+    const { youtubeId } = req.params;
+
+    const existing = await prisma.playlistVideo.findUnique({
+      where: { playlistId_youtubeId: { playlistId: playlist.id, youtubeId } },
+    });
+    if (existing && existing.isAvailable && existing.downloadStatus !== 'removed') {
+      res.status(204).end();
+      return;
+    }
+
+    // Any of the user's own copies will do as the source, but a downloaded
+    // one is preferred so the new row can share its file straight away.
+    const sources = await prisma.playlistVideo.findMany({
+      where: { youtubeId, isAvailable: true, downloadStatus: { notIn: ['removed', 'deleted'] }, playlist: { userId: req.userId } },
+      select: ADD_TO_PLAYLIST_COPY_SELECT,
+    });
+    const source = sources.find(v => v.downloadStatus === 'done' && v.mediaFileId) ?? sources[0];
+    if (!source) {
+      res.status(404).json({ error: 'Track not found' });
+      return;
+    }
+
+    // A leftover unavailable/removed row would collide with the
+    // (playlistId, youtubeId) unique constraint — replace it outright.
+    if (existing) await removePlaylistVideo(existing.id, existing.mediaFileId);
+
+    const last = await prisma.playlistVideo.findFirst({
+      where: { playlistId: playlist.id }, orderBy: { position: 'desc' }, select: { position: true },
+    });
+    const isDownloaded = source.downloadStatus === 'done' && Boolean(source.mediaFileId);
+    const { downloadStatus: _status, mediaFileId, fileSize, bitrate, ...copied } = source;
+    await prisma.playlistVideo.create({
+      data: {
+        ...copied,
+        playlistId: playlist.id,
+        position: (last?.position ?? 0) + 1,
+        isAvailable: true,
+        downloadStatus: isDownloaded ? 'done' : 'pending',
+        ...(isDownloaded ? { mediaFileId, fileSize, bitrate } : {}),
+      },
+    });
+    await prisma.playlist.update({ where: { id: playlist.id }, data: { videoCount: { increment: 1 } } });
+    if (!isDownloaded) startBackgroundDownload(playlist.id);
+
+    res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete('/:id/tracks/:youtubeId', requireAuth, async (req: AuthRequest, res, next) => {
+  try {
+    const playlist = await findEditablePlaylist(req.params.id, req.userId);
+    if (!playlist) {
+      res.status(404).json({ error: 'Playlist not found' });
+      return;
+    }
+    const existing = await prisma.playlistVideo.findUnique({
+      where: { playlistId_youtubeId: { playlistId: playlist.id, youtubeId: req.params.youtubeId } },
+    });
+    // Unlike DELETE .../videos/:videoId (which deletes the track and its
+    // file everywhere), this only drops this one playlist's row — the shared
+    // file is only cleaned up if nothing else references it anymore.
+    if (existing) await removePlaylistVideo(existing.id, existing.mediaFileId);
+    res.status(204).end();
   } catch (err) {
     next(err);
   }

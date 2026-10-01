@@ -239,6 +239,16 @@
         "confirmMessage": "Pervadinti šį kūrinį į \"{{name}}\"? HQ paieška bus paleista iš naujo su nauju pavadinimu.",
         "preview": "Groti pavyzdį",
         "stopPreview": "Sustabdyti pavyzdį"
+      },
+      "addToPlaylist": "Pridėti į grojaraštį",
+      "addToPlaylistDialog": {
+        "title": "Pridėti į grojaraštį",
+        "hint": "Spustelėkite grojaraštį, kad pridėtumėte ar pašalintumėte „{{title}}“.",
+        "empty": "Dar nesate sukūrę grojaraščių.",
+        "failedToLoad": "Nepavyko įkelti grojaraščių.",
+        "added": "Pridėta į {{name}}",
+        "removed": "Pašalinta iš {{name}}",
+        "error": "Nepavyko atnaujinti {{name}}"
       }
     },
     "miniPlayer": {

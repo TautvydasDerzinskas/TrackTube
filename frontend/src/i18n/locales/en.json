@@ -235,6 +235,16 @@
         "confirmMessage": "Rename this track to \"{{name}}\"? The HQ search will run again under the new name.",
         "preview": "Play preview",
         "stopPreview": "Stop preview"
+      },
+      "addToPlaylist": "Add to playlist",
+      "addToPlaylistDialog": {
+        "title": "Add to playlist",
+        "hint": "Tap a playlist to add or remove “{{title}}”.",
+        "empty": "You haven't created any playlists yet.",
+        "failedToLoad": "Failed to load playlists.",
+        "added": "Added to {{name}}",
+        "removed": "Removed from {{name}}",
+        "error": "Couldn't update {{name}}"
       }
     },
     "miniPlayer": {
