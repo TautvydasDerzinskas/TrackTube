@@ -1,13 +1,18 @@
 import { ReactNode } from 'react';
-import { Avatar, Box, IconButton, Tooltip } from '@mui/material';
+import { Box, IconButton, Tooltip } from '@mui/material';
 import { PlayArrow as PlayArrowIcon, Pause as PauseIcon } from '@mui/icons-material';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { PlaylistVideo } from '../api/youtube';
 import { usePlayer } from '../contexts/PlayerContext';
+import { MosaicThumbnail } from './MosaicThumbnail';
 
 interface HeaderPlayThumbnailProps {
   icon: ReactNode;
+  // Cover mosaic — see MosaicThumbnail. `seed` matches the Playlists page
+  // row for the same list so the two covers look the same.
+  mosaicThumbnails: string[];
+  seed: string;
   // The page's playable tracks, already filtered/sorted the way the list
   // below shows them — that's the queue the button plays.
   tracks: PlaylistVideo[];
@@ -19,7 +24,7 @@ interface HeaderPlayThumbnailProps {
 // playing" when playback was started from this page and the current track
 // is one of the ones listed here (so the Favourites view of All Tracks
 // doesn't claim a non-favourite that's playing).
-export function HeaderPlayThumbnail({ icon, tracks }: HeaderPlayThumbnailProps) {
+export function HeaderPlayThumbnail({ icon, mosaicThumbnails, seed, tracks }: HeaderPlayThumbnailProps) {
   const { t } = useTranslation();
   const { pathname } = useLocation();
   const { nowPlaying, isAudioPlaying, handleTogglePlay, isShuffle } = usePlayer();
@@ -39,9 +44,7 @@ export function HeaderPlayThumbnail({ icon, tracks }: HeaderPlayThumbnailProps) 
 
   return (
     <Box sx={{ position: 'relative', flexShrink: 0, '&:hover .header-play-overlay': { opacity: 1, pointerEvents: 'auto' } }}>
-      <Avatar variant="rounded" sx={{ width: 96, height: 72, borderRadius: 2 }}>
-        {icon}
-      </Avatar>
+      <MosaicThumbnail urls={mosaicThumbnails} seed={seed} width={96} height={72} borderRadius={2} icon={icon} />
       <Tooltip title={isPlaying ? t('playlists.videoList.pause') : t('playlists.videoList.play')}>
         <span>
           <IconButton className="header-play-overlay" disabled={tracks.length === 0} onClick={handlePlay}

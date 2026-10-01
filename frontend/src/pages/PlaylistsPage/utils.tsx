@@ -1,11 +1,20 @@
 import {
   CheckCircleOutline, ErrorOutline, HourglassEmpty, CloudDownload,
-  Block as BlockIcon,
+  Block as BlockIcon, Sync as SyncIcon, AutoAwesome as AutoAwesomeIcon, MusicNote as MusicNoteIcon,
 } from '@mui/icons-material';
+import { SxProps, Theme } from '@mui/material';
 import { TFunction } from 'i18next';
 import { Playlist } from '../../api/youtube';
 
 export function displayName(p: Playlist) { return p.customName ?? p.title; }
+
+// Icon drawn on a playlist's cover to say what kind it is — synced from
+// YouTube, generated ("similar"), or created by hand.
+export function PlaylistTypeIcon({ origin, sx }: { origin: Playlist['origin']; sx?: SxProps<Theme> }) {
+  if (origin === 'imported') return <SyncIcon sx={sx} />;
+  if (origin === 'generated') return <AutoAwesomeIcon sx={sx} />;
+  return <MusicNoteIcon sx={sx} />;
+}
 
 export function formatDuration(s: number | null): string {
   if (!s) return '';

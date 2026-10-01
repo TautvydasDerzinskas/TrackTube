@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Box, Typography, Chip } from '@mui/material';
 import { MusicNote as MusicNoteIcon, Favorite as FavoriteIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
@@ -9,6 +10,7 @@ import { usePageBack, usePageTitle } from '../../contexts/PageBackContext';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import { PlaylistVideo } from '../../api/youtube';
 import { HeaderPlayThumbnail } from '../../components/HeaderPlayThumbnail';
+import { pickMosaicThumbnails } from '../../components/MosaicThumbnail';
 
 interface HeaderProps {
   summary: AllTracksSummary;
@@ -25,6 +27,8 @@ interface HeaderProps {
   searchQuery: string;
   onSearchQueryChange: (query: string) => void;
   playableTracks: PlaylistVideo[];
+  // Everything currently listed (any sort) — the cover uses the newest of these.
+  tracks: PlaylistVideo[];
 }
 
 // Deliberately not the real PlaylistDetailPage Header — this is a virtual
@@ -37,7 +41,7 @@ interface HeaderProps {
 export function Header({
   summary, visibleCount, genreCounts, selectedGenres, onToggleGenre, onClearGenres,
   sort, onSortChange, hqFilter, onHqFilterChange,
-  favouriteFilter, searchQuery, onSearchQueryChange, playableTracks,
+  favouriteFilter, searchQuery, onSearchQueryChange, playableTracks, tracks,
 }: HeaderProps) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
@@ -56,12 +60,18 @@ export function Header({
     : favouriteFilter === 'favourite' ? t('playlists.favourites.title') : t('playlists.allTracks.title');
   usePageBack('/playlists', t('common.backToPlaylists'));
   usePageTitle(title);
+  const mosaicThumbnails = useMemo(
+    () => pickMosaicThumbnails([...tracks].sort((a, b) => Date.parse(b.addedAt) - Date.parse(a.addedAt))),
+    [tracks],
+  );
 
   return (
     <Box sx={{ mb: 3, flexShrink: 0 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
         <HeaderPlayThumbnail
           icon={favouriteFilter === 'favourite' ? <FavoriteIcon sx={{ fontSize: 32 }} /> : <MusicNoteIcon sx={{ fontSize: 32 }} />}
+          mosaicThumbnails={mosaicThumbnails}
+          seed={favouriteFilter === 'favourite' ? 'favourites' : 'all-tracks'}
           tracks={playableTracks}
         />
 

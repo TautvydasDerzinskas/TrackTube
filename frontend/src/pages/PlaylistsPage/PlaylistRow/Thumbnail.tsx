@@ -1,11 +1,10 @@
-import { Avatar } from '@mui/material';
-import { MusicNote as MusicNoteIcon } from '@mui/icons-material';
+import { Playlist } from '../../../api/youtube';
+import { MosaicThumbnail } from '../../../components/MosaicThumbnail';
+import { PlaylistTypeIcon } from '../utils';
 
-export function Thumbnail({ thumbnailUrl }: { thumbnailUrl: string | null }) {
+export function Thumbnail({ playlist }: { playlist: Playlist }) {
   return (
-    <Avatar src={thumbnailUrl ?? undefined} variant="rounded"
-      sx={{ width: 56, height: 40, borderRadius: 1, flexShrink: 0 }}>
-      <MusicNoteIcon />
-    </Avatar>
+    <MosaicThumbnail urls={playlist.mosaicThumbnails} seed={playlist.id}
+      width={56} height={40} borderRadius={1} icon={<PlaylistTypeIcon origin={playlist.origin} />} />
   );
 }

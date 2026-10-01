@@ -70,7 +70,7 @@ export function PlaylistRow({
         '&:hover .playlist-play-overlay': { opacity: 1, pointerEvents: 'auto' },
         '&:hover': { bgcolor: 'action.hover' } }}>
       <Box sx={{ position: 'relative', flexShrink: 0 }} onClick={e => e.stopPropagation()}>
-        <Thumbnail thumbnailUrl={playlist.thumbnailUrl} />
+        <Thumbnail playlist={playlist} />
         <Tooltip title={isRowPlaying ? t('playlists.videoList.pause') : t('playlists.videoList.play')}>
           <span>
             <IconButton

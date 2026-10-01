@@ -1,13 +1,18 @@
 import { ReactNode } from 'react';
-import { Avatar, Box, IconButton, Tooltip } from '@mui/material';
+import { Box, IconButton, Tooltip } from '@mui/material';
 import { PlayArrow as PlayArrowIcon, Pause as PauseIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { PlaylistVideo } from '../../api/youtube';
 import { usePlayer } from '../../contexts/PlayerContext';
+import { MosaicThumbnail } from '../../components/MosaicThumbnail';
 
 interface VirtualPlaylistThumbnailProps {
   icon: ReactNode;
+  // Cover mosaic — see MosaicThumbnail. `seed` matches the destination
+  // page's header so the two covers look the same.
+  mosaicThumbnails: string[];
+  seed: string;
   // Where the row itself leads (and where playback is started from, so the
   // mini player's title link comes back here).
   path: string;
@@ -25,7 +30,7 @@ interface VirtualPlaylistThumbnailProps {
 // revealed by hovering the thumbnail itself rather than the whole row.
 // Playback mirrors PlaylistsPage's handlePlayFirst: navigate straight away,
 // start playing once the queue resolves.
-export function VirtualPlaylistThumbnail({ icon, path, isActive, disabled, loadQueue }: VirtualPlaylistThumbnailProps) {
+export function VirtualPlaylistThumbnail({ icon, mosaicThumbnails, seed, path, isActive, disabled, loadQueue }: VirtualPlaylistThumbnailProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { nowPlaying, isAudioPlaying, handleTogglePlay, isShuffle } = usePlayer();
@@ -51,9 +56,7 @@ export function VirtualPlaylistThumbnail({ icon, path, isActive, disabled, loadQ
   return (
     <Box onClick={e => e.stopPropagation()}
       sx={{ position: 'relative', flexShrink: 0, '&:hover .virtual-playlist-play-overlay': { opacity: 1, pointerEvents: 'auto' } }}>
-      <Avatar variant="rounded" sx={{ width: 56, height: 40, borderRadius: 1 }}>
-        {icon}
-      </Avatar>
+      <MosaicThumbnail urls={mosaicThumbnails} seed={seed} width={56} height={40} borderRadius={1} icon={icon} />
       <Tooltip title={isPlaying ? t('playlists.videoList.pause') : t('playlists.videoList.play')}>
         <span>
           <IconButton

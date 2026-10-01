@@ -36,6 +36,7 @@ export default function HistoryPage() {
         searchQuery={searchQuery}
         onSearchQueryChange={setSearchQuery}
         playableTracks={playableTracks}
+        tracks={filteredTracks}
       />
       <Box sx={{ flexGrow: 1, minHeight: 0 }}>
         <TrackList

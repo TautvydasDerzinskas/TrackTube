@@ -26,7 +26,7 @@ export function AllTracksListItem({ refreshOn }: AllTracksListItemProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { nowPlaying } = usePlayer();
-  const [summary, setSummary] = useState<{ songCount: number; totalDurationSec: number; totalSize: number } | null>(null);
+  const [summary, setSummary] = useState<{ songCount: number; totalDurationSec: number; totalSize: number; mosaicThumbnails: string[] } | null>(null);
 
   useEffect(() => {
     playlistsApi.getAllTracksSummary().then(setSummary).catch(() => {});
@@ -48,6 +48,8 @@ export function AllTracksListItem({ refreshOn }: AllTracksListItemProps) {
         '&:hover': { bgcolor: 'action.hover' } }}>
       <VirtualPlaylistThumbnail
         icon={<MusicNoteIcon />}
+        mosaicThumbnails={summary.mosaicThumbnails}
+        seed="all-tracks"
         path="/all-tracks"
         isActive={nowPlaying?.originPath === '/all-tracks'}
         disabled={summary.songCount === 0}

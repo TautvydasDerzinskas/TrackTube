@@ -26,7 +26,7 @@ export function HistoryListItem({ refreshOn }: HistoryListItemProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { nowPlaying } = usePlayer();
-  const [summary, setSummary] = useState<{ songCount: number; totalDurationSec: number; totalSize: number } | null>(null);
+  const [summary, setSummary] = useState<{ songCount: number; totalDurationSec: number; totalSize: number; mosaicThumbnails: string[] } | null>(null);
 
   useEffect(() => {
     playlistsApi.getHistorySummary().then(setSummary).catch(() => {});
@@ -48,6 +48,8 @@ export function HistoryListItem({ refreshOn }: HistoryListItemProps) {
         '&:hover': { bgcolor: 'action.hover' } }}>
       <VirtualPlaylistThumbnail
         icon={<HistoryIcon />}
+        mosaicThumbnails={summary.mosaicThumbnails}
+        seed="history"
         path="/history"
         isActive={nowPlaying?.originPath === '/history'}
         disabled={summary.songCount === 0}

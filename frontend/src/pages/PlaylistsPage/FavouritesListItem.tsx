@@ -26,7 +26,7 @@ export function FavouritesListItem({ refreshOn }: FavouritesListItemProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { nowPlaying, nowPlayingVideo } = usePlayer();
-  const [summary, setSummary] = useState<{ songCount: number; totalDurationSec: number; totalSize: number } | null>(null);
+  const [summary, setSummary] = useState<{ songCount: number; totalDurationSec: number; totalSize: number; mosaicThumbnails: string[] } | null>(null);
 
   useEffect(() => {
     playlistsApi.getFavouritesSummary().then(setSummary).catch(() => {});
@@ -53,6 +53,8 @@ export function FavouritesListItem({ refreshOn }: FavouritesListItemProps) {
           told apart from an All Tracks one beyond the current track being a favourite. */}
       <VirtualPlaylistThumbnail
         icon={<FavoriteIcon />}
+        mosaicThumbnails={summary.mosaicThumbnails}
+        seed="favourites"
         path="/all-tracks?fav=favourite"
         isActive={nowPlaying?.originPath === '/all-tracks' && Boolean(nowPlayingVideo?.isFavourite)}
         disabled={summary.songCount === 0}

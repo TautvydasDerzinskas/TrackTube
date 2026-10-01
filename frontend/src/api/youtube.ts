@@ -31,6 +31,9 @@ export interface Playlist {
   title: string;
   customName: string | null;
   thumbnailUrl: string | null;
+  // Newest tracks' thumbnails (up to 10), for the mosaic cover — see
+  // MosaicThumbnail.
+  mosaicThumbnails: string[];
   videoCount: number;
   downloadedCount: number;
   failedCount: number;
@@ -192,8 +195,8 @@ export const playlistsApi = {
 
   // Just the numbers the "All Tracks" row in the playlists list needs —
   // avoids pulling every video's full metadata just to render that summary.
-  getAllTracksSummary: async (): Promise<{ songCount: number; totalDurationSec: number; totalSize: number }> => {
-    const { data } = await client.get<{ songCount: number; totalDurationSec: number; totalSize: number }>('/playlists/all-tracks/summary');
+  getAllTracksSummary: async (): Promise<{ songCount: number; totalDurationSec: number; totalSize: number; mosaicThumbnails: string[] }> => {
+    const { data } = await client.get<{ songCount: number; totalDurationSec: number; totalSize: number; mosaicThumbnails: string[] }>('/playlists/all-tracks/summary');
     return data;
   },
 
@@ -208,8 +211,8 @@ export const playlistsApi = {
 
   // Just the numbers the "Listening History" row in the playlists list
   // needs — same rationale as getAllTracksSummary.
-  getHistorySummary: async (): Promise<{ songCount: number; totalDurationSec: number; totalSize: number }> => {
-    const { data } = await client.get<{ songCount: number; totalDurationSec: number; totalSize: number }>('/playlists/history/summary');
+  getHistorySummary: async (): Promise<{ songCount: number; totalDurationSec: number; totalSize: number; mosaicThumbnails: string[] }> => {
+    const { data } = await client.get<{ songCount: number; totalDurationSec: number; totalSize: number; mosaicThumbnails: string[] }>('/playlists/history/summary');
     return data;
   },
 
@@ -217,8 +220,8 @@ export const playlistsApi = {
   // same rationale as getAllTracksSummary. Favourited tracks themselves are
   // viewed via getAllTracks with the favourite filter, not a separate list
   // endpoint.
-  getFavouritesSummary: async (): Promise<{ songCount: number; totalDurationSec: number; totalSize: number }> => {
-    const { data } = await client.get<{ songCount: number; totalDurationSec: number; totalSize: number }>('/playlists/favourites/summary');
+  getFavouritesSummary: async (): Promise<{ songCount: number; totalDurationSec: number; totalSize: number; mosaicThumbnails: string[] }> => {
+    const { data } = await client.get<{ songCount: number; totalDurationSec: number; totalSize: number; mosaicThumbnails: string[] }>('/playlists/favourites/summary');
     return data;
   },
 

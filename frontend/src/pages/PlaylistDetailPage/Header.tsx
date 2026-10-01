@@ -1,12 +1,13 @@
-import { Box, Typography, Avatar, Chip, Stack, IconButton, Tooltip } from '@mui/material';
-import { MusicNote as MusicNoteIcon, PlayArrow as PlayArrowIcon, Pause as PauseIcon, MoreVert as MoreVertIcon } from '@mui/icons-material';
+import { Box, Typography, Chip, Stack, IconButton, Tooltip } from '@mui/material';
+import { PlayArrow as PlayArrowIcon, Pause as PauseIcon, MoreVert as MoreVertIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { Playlist } from '../../api/youtube';
-import { displayName, formatBytes } from '../PlaylistsPage/utils';
+import { displayName, formatBytes, PlaylistTypeIcon } from '../PlaylistsPage/utils';
 import { GenreCount, SortOption, HqFilterOption } from './hooks/genreFilter';
 import { TrackFilterBar } from './TrackFilterBar';
 import { PlaylistActionsMenu } from '../PlaylistsPage/PlaylistRow/PlaylistActionsMenu';
 import { usePageBack, usePageTitle } from '../../contexts/PageBackContext';
+import { MosaicThumbnail } from '../../components/MosaicThumbnail';
 
 interface HeaderProps {
   playlist: Playlist;
@@ -60,10 +61,8 @@ export function Header({
             page's header) plus title/chips. */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1, minWidth: 0 }}>
           <Box sx={{ position: 'relative', flexShrink: 0 }}>
-            <Avatar src={playlist.thumbnailUrl ?? undefined} variant="rounded"
-              sx={{ width: 96, height: 72, borderRadius: 2 }}>
-              <MusicNoteIcon sx={{ fontSize: 32 }} />
-            </Avatar>
+            <MosaicThumbnail urls={playlist.mosaicThumbnails} seed={playlist.id}
+              width={96} height={72} borderRadius={2} icon={<PlaylistTypeIcon origin={playlist.origin} sx={{ fontSize: 32 }} />} />
             <Tooltip title={isPlaying ? t('playlists.videoList.pause') : t('playlists.videoList.play')}>
               <span>
                 <IconButton disabled={!canPlayFirst} onClick={onPlayFirst}

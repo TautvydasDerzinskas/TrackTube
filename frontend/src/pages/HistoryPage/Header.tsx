@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Box, Typography, Chip, TextField, InputAdornment } from '@mui/material';
 import { History as HistoryIcon, Search as SearchIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
@@ -7,6 +8,7 @@ import { usePageBack, usePageTitle } from '../../contexts/PageBackContext';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import { PlaylistVideo } from '../../api/youtube';
 import { HeaderPlayThumbnail } from '../../components/HeaderPlayThumbnail';
+import { pickMosaicThumbnails } from '../../components/MosaicThumbnail';
 
 interface HeaderProps {
   summary: HistorySummary;
@@ -14,6 +16,8 @@ interface HeaderProps {
   searchQuery: string;
   onSearchQueryChange: (query: string) => void;
   playableTracks: PlaylistVideo[];
+  // Everything currently listed, most recently played first.
+  tracks: PlaylistVideo[];
 }
 
 // Same "virtual aggregate, not a real playlist" shape as AllTracksPage's own
@@ -23,16 +27,18 @@ interface HeaderProps {
 // played first" order, and sorting/filtering it down would work against
 // that. Just a search box, kept because narrowing to a track you know you
 // played doesn't fight the ordering the way sorting/filtering would.
-export function Header({ summary, visibleCount, searchQuery, onSearchQueryChange, playableTracks }: HeaderProps) {
+export function Header({ summary, visibleCount, searchQuery, onSearchQueryChange, playableTracks, tracks }: HeaderProps) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
   usePageBack('/playlists', t('common.backToPlaylists'));
   usePageTitle(t('playlists.history.title'));
+  const mosaicThumbnails = useMemo(() => pickMosaicThumbnails(tracks), [tracks]);
 
   return (
     <Box sx={{ mb: 3, flexShrink: 0 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-        <HeaderPlayThumbnail icon={<HistoryIcon sx={{ fontSize: 32 }} />} tracks={playableTracks} />
+        <HeaderPlayThumbnail icon={<HistoryIcon sx={{ fontSize: 32 }} />}
+          mosaicThumbnails={mosaicThumbnails} seed="history" tracks={playableTracks} />
 
         <Box sx={{ minWidth: 0, flexGrow: 1 }}>
           {isMobile && (

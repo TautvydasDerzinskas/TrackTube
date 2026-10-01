@@ -7,7 +7,7 @@ import { getSimilarTracks, scrobble, scrobbleBatch, ScrobbleEntry } from '../ser
 import { getSharedFilePath, sanitizeFilename } from '../services/downloader';
 import { isLastfmDiscoverEnabled } from '../services/settings';
 import { isOnline } from '../services/connectivity';
-import { withDownloadStats } from '../services/playlistStats';
+import { withDownloadStats, pickMosaicThumbnails, MOSAIC_SIZE } from '../services/playlistStats';
 import { bufferToFloat32Array, cosineSimilarity } from '../services/embeddings';
 import {
   isSyncing,
@@ -44,6 +44,11 @@ const VIDEO_SELECT_WITHOUT_EMBEDDING = {
 // than a full library view, so 100 keeps the page (and its summary box)
 // snappy without needing an index dedicated to this one query.
 const MAX_HISTORY_ITEMS = 100;
+
+// Over-fetched so pickMosaicThumbnails still finds MOSAIC_SIZE distinct
+// tracks when the newest ones are the same video sitting in several playlists.
+const MOSAIC_CANDIDATES = MOSAIC_SIZE * 3;
+const MOSAIC_SELECT = { youtubeId: true, thumbnailUrl: true } as const;
 
 // ─── GET /api/playlists ────────────────────────────────────────────────────────
 
@@ -99,10 +104,17 @@ router.get('/all-tracks/summary', requireAuth, async (req: AuthRequest, res, nex
         _sum: { duration: true, fileSize: true },
       }),
     ]);
+    const newest = await prisma.playlistVideo.findMany({
+      where: { playlist: { userId }, isAvailable: true, downloadStatus: { not: 'removed' } },
+      orderBy: { addedAt: 'desc' },
+      take: MOSAIC_CANDIDATES,
+      select: MOSAIC_SELECT,
+    });
     res.json({
       songCount,
       totalDurationSec: doneAggregate._sum.duration ?? 0,
       totalSize: doneAggregate._sum.fileSize ?? 0,
+      mosaicThumbnails: pickMosaicThumbnails(newest),
     });
   } catch (err) {
     next(err);
@@ -124,10 +136,17 @@ router.get('/favourites/summary', requireAuth, async (req: AuthRequest, res, nex
         _sum: { duration: true, fileSize: true },
       }),
     ]);
+    const newest = await prisma.playlistVideo.findMany({
+      where: { playlist: { userId }, isAvailable: true, downloadStatus: { not: 'removed' }, isFavourite: true },
+      orderBy: { addedAt: 'desc' },
+      take: MOSAIC_CANDIDATES,
+      select: MOSAIC_SELECT,
+    });
     res.json({
       songCount,
       totalDurationSec: doneAggregate._sum.duration ?? 0,
       totalSize: doneAggregate._sum.fileSize ?? 0,
+      mosaicThumbnails: pickMosaicThumbnails(newest),
     });
   } catch (err) {
     next(err);
@@ -179,13 +198,13 @@ router.get('/history/summary', requireAuth, async (req: AuthRequest, res, next) 
       },
       orderBy: { lastPlayStartedAt: 'desc' },
       take: MAX_HISTORY_ITEMS,
-      select: { duration: true, fileSize: true, downloadStatus: true },
+      select: { duration: true, fileSize: true, downloadStatus: true, ...MOSAIC_SELECT },
     });
     const totalDurationSec = videos
       .filter((v) => v.downloadStatus === 'done')
       .reduce((sum, v) => sum + (v.duration ?? 0), 0);
     const totalSize = videos.reduce((sum, v) => sum + (v.fileSize ?? 0), 0);
-    res.json({ songCount: videos.length, totalDurationSec, totalSize });
+    res.json({ songCount: videos.length, totalDurationSec, totalSize, mosaicThumbnails: pickMosaicThumbnails(videos) });
   } catch (err) {
     next(err);
   }
