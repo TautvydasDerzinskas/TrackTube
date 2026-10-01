@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Box, Typography, Paper, Chip, IconButton, Tooltip, Avatar, Stack } from '@mui/material';
+import { Box, Typography, Paper, Chip, IconButton, Tooltip, Stack } from '@mui/material';
 import { History as HistoryIcon, ChevronRight as ChevronRightIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Playlist, playlistsApi } from '../../api/youtube';
+import { usePlayer } from '../../contexts/PlayerContext';
 import { formatBytes, formatPlaybackTime } from './utils';
+import { VirtualPlaylistThumbnail } from './VirtualPlaylistThumbnail';
 
 interface HistoryListItemProps {
   // Same refetch-on-change contract as AllTracksListItem — see its own doc
@@ -23,6 +25,7 @@ interface HistoryListItemProps {
 export function HistoryListItem({ refreshOn }: HistoryListItemProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { nowPlaying } = usePlayer();
   const [summary, setSummary] = useState<{ songCount: number; totalDurationSec: number; totalSize: number } | null>(null);
 
   useEffect(() => {
@@ -31,6 +34,11 @@ export function HistoryListItem({ refreshOn }: HistoryListItemProps) {
 
   if (!summary) return null;
 
+  const loadQueue = async () => {
+    const { videos } = await playlistsApi.getHistory();
+    return videos.filter(v => v.downloadStatus === 'done');
+  };
+
   const open = () => navigate('/history');
 
   return (
@@ -38,9 +46,13 @@ export function HistoryListItem({ refreshOn }: HistoryListItemProps) {
       sx={{ mb: 1, px: 2, py: 1, display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer',
         borderRadius: '8px', transition: 'background-color 0.2s',
         '&:hover': { bgcolor: 'action.hover' } }}>
-      <Avatar variant="rounded" sx={{ width: 56, height: 40, borderRadius: 1, flexShrink: 0 }}>
-        <HistoryIcon />
-      </Avatar>
+      <VirtualPlaylistThumbnail
+        icon={<HistoryIcon />}
+        path="/history"
+        isActive={nowPlaying?.originPath === '/history'}
+        disabled={summary.songCount === 0}
+        loadQueue={loadQueue}
+      />
 
       <Box sx={{ flexGrow: 1, minWidth: 0, overflow: 'hidden' }}>
         <Typography variant="subtitle2" fontWeight={600} noWrap>

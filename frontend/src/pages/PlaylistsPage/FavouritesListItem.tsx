@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Box, Typography, Paper, Chip, IconButton, Tooltip, Avatar, Stack } from '@mui/material';
+import { Box, Typography, Paper, Chip, IconButton, Tooltip, Stack } from '@mui/material';
 import { Favorite as FavoriteIcon, ChevronRight as ChevronRightIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Playlist, playlistsApi } from '../../api/youtube';
+import { usePlayer } from '../../contexts/PlayerContext';
+import { sortTracks, filterByFavourite, DEFAULT_SORT } from '../PlaylistDetailPage/hooks/genreFilter';
 import { formatBytes, formatPlaybackTime } from './utils';
+import { VirtualPlaylistThumbnail } from './VirtualPlaylistThumbnail';
 
 interface FavouritesListItemProps {
   // Same refetch-on-change contract as AllTracksListItem/HistoryListItem —
@@ -22,6 +25,7 @@ interface FavouritesListItemProps {
 export function FavouritesListItem({ refreshOn }: FavouritesListItemProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { nowPlaying, nowPlayingVideo } = usePlayer();
   const [summary, setSummary] = useState<{ songCount: number; totalDurationSec: number; totalSize: number } | null>(null);
 
   useEffect(() => {
@@ -29,6 +33,11 @@ export function FavouritesListItem({ refreshOn }: FavouritesListItemProps) {
   }, [refreshOn]);
 
   if (!summary) return null;
+
+  const loadQueue = async () => {
+    const { videos } = await playlistsApi.getAllTracks();
+    return sortTracks(filterByFavourite(videos.filter(v => v.downloadStatus === 'done'), 'favourite'), DEFAULT_SORT);
+  };
 
   // The favourites filter lives on the All Tracks page itself (see
   // TrackFilterBar's favourite Select) rather than a dedicated page — this
@@ -40,9 +49,15 @@ export function FavouritesListItem({ refreshOn }: FavouritesListItemProps) {
       sx={{ mb: 1, px: 2, py: 1, display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer',
         borderRadius: '8px', transition: 'background-color 0.2s',
         '&:hover': { bgcolor: 'action.hover' } }}>
-      <Avatar variant="rounded" sx={{ width: 56, height: 40, borderRadius: 1, flexShrink: 0 }}>
-        <FavoriteIcon />
-      </Avatar>
+      {/* originPath only keeps the pathname, so a favourites session can't be
+          told apart from an All Tracks one beyond the current track being a favourite. */}
+      <VirtualPlaylistThumbnail
+        icon={<FavoriteIcon />}
+        path="/all-tracks?fav=favourite"
+        isActive={nowPlaying?.originPath === '/all-tracks' && Boolean(nowPlayingVideo?.isFavourite)}
+        disabled={summary.songCount === 0}
+        loadQueue={loadQueue}
+      />
 
       <Box sx={{ flexGrow: 1, minWidth: 0, overflow: 'hidden' }}>
         <Typography variant="subtitle2" fontWeight={600} noWrap>

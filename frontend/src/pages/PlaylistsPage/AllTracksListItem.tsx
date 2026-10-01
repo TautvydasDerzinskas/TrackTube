@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Box, Typography, Paper, Chip, IconButton, Tooltip, Avatar, Stack } from '@mui/material';
+import { Box, Typography, Paper, Chip, IconButton, Tooltip, Stack } from '@mui/material';
 import { MusicNote as MusicNoteIcon, ChevronRight as ChevronRightIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Playlist, playlistsApi } from '../../api/youtube';
+import { usePlayer } from '../../contexts/PlayerContext';
+import { sortTracks, DEFAULT_SORT } from '../PlaylistDetailPage/hooks/genreFilter';
 import { formatBytes, formatPlaybackTime } from './utils';
+import { VirtualPlaylistThumbnail } from './VirtualPlaylistThumbnail';
 
 interface AllTracksListItemProps {
   // Re-fetches the summary whenever this changes. Passing the same
@@ -22,6 +25,7 @@ interface AllTracksListItemProps {
 export function AllTracksListItem({ refreshOn }: AllTracksListItemProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { nowPlaying } = usePlayer();
   const [summary, setSummary] = useState<{ songCount: number; totalDurationSec: number; totalSize: number } | null>(null);
 
   useEffect(() => {
@@ -30,6 +34,11 @@ export function AllTracksListItem({ refreshOn }: AllTracksListItemProps) {
 
   if (!summary) return null;
 
+  const loadQueue = async () => {
+    const { videos } = await playlistsApi.getAllTracks();
+    return sortTracks(videos.filter(v => v.downloadStatus === 'done'), DEFAULT_SORT);
+  };
+
   const open = () => navigate('/all-tracks');
 
   return (
@@ -37,9 +46,13 @@ export function AllTracksListItem({ refreshOn }: AllTracksListItemProps) {
       sx={{ mb: 1, px: 2, py: 1, display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer',
         borderRadius: '8px', transition: 'background-color 0.2s',
         '&:hover': { bgcolor: 'action.hover' } }}>
-      <Avatar variant="rounded" sx={{ width: 56, height: 40, borderRadius: 1, flexShrink: 0 }}>
-        <MusicNoteIcon />
-      </Avatar>
+      <VirtualPlaylistThumbnail
+        icon={<MusicNoteIcon />}
+        path="/all-tracks"
+        isActive={nowPlaying?.originPath === '/all-tracks'}
+        disabled={summary.songCount === 0}
+        loadQueue={loadQueue}
+      />
 
       <Box sx={{ flexGrow: 1, minWidth: 0, overflow: 'hidden' }}>
         <Typography variant="subtitle2" fontWeight={600} noWrap>
