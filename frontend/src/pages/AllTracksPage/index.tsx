@@ -93,6 +93,7 @@ export default function AllTracksPage() {
         favouriteFilter={favouriteFilter}
         searchQuery={searchQuery}
         onSearchQueryChange={setSearchQuery}
+        playableTracks={playableTracks}
       />
       {/* Takes whatever height Header didn't use — TrackList's own virtualized
           list is what actually scrolls, Header stays pinned above it. */}

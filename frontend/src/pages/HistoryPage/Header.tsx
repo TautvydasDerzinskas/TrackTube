@@ -1,16 +1,19 @@
-import { Box, Typography, Avatar, Chip, TextField, InputAdornment } from '@mui/material';
+import { Box, Typography, Chip, TextField, InputAdornment } from '@mui/material';
 import { History as HistoryIcon, Search as SearchIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { formatPlaybackTime } from '../PlaylistsPage/utils';
 import { HistorySummary } from './hooks/useHistoryDetail';
 import { usePageBack, usePageTitle } from '../../contexts/PageBackContext';
 import { useIsMobile } from '../../hooks/useIsMobile';
+import { PlaylistVideo } from '../../api/youtube';
+import { HeaderPlayThumbnail } from '../../components/HeaderPlayThumbnail';
 
 interface HeaderProps {
   summary: HistorySummary;
   visibleCount: number;
   searchQuery: string;
   onSearchQueryChange: (query: string) => void;
+  playableTracks: PlaylistVideo[];
 }
 
 // Same "virtual aggregate, not a real playlist" shape as AllTracksPage's own
@@ -20,7 +23,7 @@ interface HeaderProps {
 // played first" order, and sorting/filtering it down would work against
 // that. Just a search box, kept because narrowing to a track you know you
 // played doesn't fight the ordering the way sorting/filtering would.
-export function Header({ summary, visibleCount, searchQuery, onSearchQueryChange }: HeaderProps) {
+export function Header({ summary, visibleCount, searchQuery, onSearchQueryChange, playableTracks }: HeaderProps) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
   usePageBack('/playlists', t('common.backToPlaylists'));
@@ -29,9 +32,7 @@ export function Header({ summary, visibleCount, searchQuery, onSearchQueryChange
   return (
     <Box sx={{ mb: 3, flexShrink: 0 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-        <Avatar variant="rounded" sx={{ width: 96, height: 72, borderRadius: 2, flexShrink: 0 }}>
-          <HistoryIcon sx={{ fontSize: 32 }} />
-        </Avatar>
+        <HeaderPlayThumbnail icon={<HistoryIcon sx={{ fontSize: 32 }} />} tracks={playableTracks} />
 
         <Box sx={{ minWidth: 0, flexGrow: 1 }}>
           {isMobile && (

@@ -1,5 +1,5 @@
-import { Box, Typography, Avatar, Chip } from '@mui/material';
-import { MusicNote as MusicNoteIcon } from '@mui/icons-material';
+import { Box, Typography, Chip } from '@mui/material';
+import { MusicNote as MusicNoteIcon, Favorite as FavoriteIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { GenreCount, NO_GENRE_KEY, SortOption, HqFilterOption, FavouriteFilterOption } from '../PlaylistDetailPage/hooks/genreFilter';
 import { TrackFilterBar } from '../PlaylistDetailPage/TrackFilterBar';
@@ -7,6 +7,8 @@ import { formatPlaybackTime } from '../PlaylistsPage/utils';
 import { AllTracksSummary } from './hooks/useAllTracksDetail';
 import { usePageBack, usePageTitle } from '../../contexts/PageBackContext';
 import { useIsMobile } from '../../hooks/useIsMobile';
+import { PlaylistVideo } from '../../api/youtube';
+import { HeaderPlayThumbnail } from '../../components/HeaderPlayThumbnail';
 
 interface HeaderProps {
   summary: AllTracksSummary;
@@ -22,18 +24,20 @@ interface HeaderProps {
   favouriteFilter: FavouriteFilterOption;
   searchQuery: string;
   onSearchQueryChange: (query: string) => void;
+  playableTracks: PlaylistVideo[];
 }
 
 // Deliberately not the real PlaylistDetailPage Header — this is a virtual
-// aggregate, not a real playlist, so there's no thumbnail, no rename/sync
-// concept, and no "synced X/Y" chip to show (nothing here is ever "synced"
-// as a whole — each track's own download state is already visible in its
-// row). Only the track filter/sort bar carries over, since that's the one
-// thing this page is explicitly meant to behave like a playlist page for.
+// aggregate, not a real playlist, so there's no real thumbnail, no
+// rename/sync concept, and no "synced X/Y" chip to show (nothing here is
+// ever "synced" as a whole — each track's own download state is already
+// visible in its row). Only the play button (see HeaderPlayThumbnail) and
+// the track filter/sort bar carry over, since those are what this page is
+// explicitly meant to behave like a playlist page for.
 export function Header({
   summary, visibleCount, genreCounts, selectedGenres, onToggleGenre, onClearGenres,
   sort, onSortChange, hqFilter, onHqFilterChange,
-  favouriteFilter, searchQuery, onSearchQueryChange,
+  favouriteFilter, searchQuery, onSearchQueryChange, playableTracks,
 }: HeaderProps) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
@@ -56,9 +60,10 @@ export function Header({
   return (
     <Box sx={{ mb: 3, flexShrink: 0 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-        <Avatar variant="rounded" sx={{ width: 96, height: 72, borderRadius: 2, flexShrink: 0 }}>
-          <MusicNoteIcon sx={{ fontSize: 32 }} />
-        </Avatar>
+        <HeaderPlayThumbnail
+          icon={favouriteFilter === 'favourite' ? <FavoriteIcon sx={{ fontSize: 32 }} /> : <MusicNoteIcon sx={{ fontSize: 32 }} />}
+          tracks={playableTracks}
+        />
 
         <Box sx={{ minWidth: 0, flexGrow: 1 }}>
           {isMobile && (
