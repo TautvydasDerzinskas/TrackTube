@@ -17,6 +17,15 @@
     "description": "The mobile experience is only available through the TrackTube Android app. Tap above to download it, or continue in your browser.",
     "continueOnWeb": "Continue in browser"
   },
+  "installPrompt": {
+    "title": "Install TrackTube",
+    "description": "Open it like a regular app, straight from your dock or home screen",
+    "install": "Install",
+    "iosTap": "Tap",
+    "iosShare": "Share",
+    "iosThen": "then",
+    "iosAddToHome": "Add to Home Screen"
+  },
   "auth": {
     "appName": "TrackTube",
     "signIn": "Sign In",

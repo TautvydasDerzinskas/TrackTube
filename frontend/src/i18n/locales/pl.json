@@ -17,6 +17,15 @@
     "description": "Doświadczenie mobilne jest dostępne tylko przez aplikację TrackTube na Androida. Dotknij powyżej, aby pobrać, albo kontynuuj w przeglądarce.",
     "continueOnWeb": "Kontynuuj w przeglądarce"
   },
+  "installPrompt": {
+    "title": "Zainstaluj TrackTube",
+    "description": "Otwieraj jak zwykłą aplikację, prosto z paska Dock lub ekranu głównego",
+    "install": "Zainstaluj",
+    "iosTap": "Dotknij",
+    "iosShare": "Udostępnij",
+    "iosThen": "a następnie",
+    "iosAddToHome": "Do ekranu początkowego"
+  },
   "auth": {
     "appName": "TrackTube",
     "signIn": "Zaloguj się",

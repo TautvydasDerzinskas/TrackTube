@@ -17,6 +17,15 @@
     "description": "Mobilioji patirtis pasiekiama tik per TrackTube Android programėlę. Palieskite aukščiau, kad atsisiųstumėte, arba tęskite naršyklėje.",
     "continueOnWeb": "Tęsti naršyklėje"
   },
+  "installPrompt": {
+    "title": "Įdiegti TrackTube",
+    "description": "Atidarykite kaip įprastą programą tiesiai iš darbalaukio ar pradžios ekrano",
+    "install": "Įdiegti",
+    "iosTap": "Palieskite",
+    "iosShare": "Bendrinti",
+    "iosThen": "tada",
+    "iosAddToHome": "Pridėti prie pradžios ekrano"
+  },
   "auth": {
     "appName": "TrackTube",
     "signIn": "Prisijungti",
