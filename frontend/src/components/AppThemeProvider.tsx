@@ -41,6 +41,12 @@ export function AppThemeProvider({ children }: { children: ReactNode }) {
     if (favicon) favicon.href = mode === 'dark' ? '/assets/app-icon-dark.svg' : '/assets/app-icon-light.svg';
   }, [mode]);
 
+  useEffect(() => {
+    document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]').forEach((meta) => {
+      meta.content = theme.palette.background.paper;
+    });
+  }, [theme]);
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
