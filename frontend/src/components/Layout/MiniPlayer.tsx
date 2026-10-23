@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import { RepeatMode } from '../../api/playbackState';
 import { SloshSlider } from './SloshSlider';
+import { WaterRipple } from '../WaterRipple';
 
 interface MiniPlayerProps {
   title: string | undefined;
@@ -109,10 +110,12 @@ export function MiniPlayer({
   };
 
   const thumbnail = (
-    <Avatar src={thumbnailUrl ?? undefined} variant="rounded"
-      sx={{ width: isMobile ? 48 : 40, height: isMobile ? 48 : 40, borderRadius: 1, flexShrink: 0 }}>
-      <MusicNoteIcon />
-    </Avatar>
+    <WaterRipple src={thumbnailUrl} active={isAudioPlaying}>
+      <Avatar src={thumbnailUrl ?? undefined} variant="rounded"
+        sx={{ width: isMobile ? 48 : 40, height: isMobile ? 48 : 40, borderRadius: 1, flexShrink: 0 }}>
+        <MusicNoteIcon />
+      </Avatar>
+    </WaterRipple>
   );
   // Always rendered (not conditionally hidden) so the control cluster never
   // reflows as hasPrevious/hasNext change — just disabled, with the theme's

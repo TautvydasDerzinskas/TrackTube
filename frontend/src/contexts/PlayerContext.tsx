@@ -8,6 +8,7 @@ import { nowPlayingApi } from '../api/nowPlaying';
 import { playbackStateApi, PersistedQueueEntry, RepeatMode } from '../api/playbackState';
 import { NowPlaying } from '../pages/PlaylistsPage/types';
 import { useToast } from './ToastContext';
+import { useBeatDetector } from '../hooks/useBeatDetector';
 
 export type QueueTrack = PlaylistVideo & { playlistId?: string };
 
@@ -109,6 +110,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   });
   const [youtubePopup, setYoutubePopup] = useState<{ videoId: string; title: string } | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  // Feeds WaterRipple on the now-playing thumbnails.
+  useBeatDetector(audioRef, isAudioPlaying);
   const currentRef = useRef(current);
   currentRef.current = current;
   // Mirror isShuffle/repeatMode into refs (same rationale as currentRef) so

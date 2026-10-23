@@ -13,6 +13,7 @@ import { formatDuration, formatGenre, STATUS_ICON, isLowBitrate } from '../pages
 import { useTrackActions } from '../hooks/useTrackActions';
 import { TrackContextMenu } from './TrackContextMenu';
 import { RollingPlaysCount } from './RollingPlaysCount';
+import { WaterRipple } from './WaterRipple';
 
 export interface TrackRowProps {
   video: PlaylistVideo;
@@ -99,9 +100,11 @@ export function TrackRow({ video: v, playlistId, isCurrentTrack, isAudioPlaying,
       }}
     >
       <Box sx={{ position: 'relative', flexShrink: 0 }}>
-        <Avatar src={v.thumbnailUrl ?? undefined} variant="rounded" sx={{ width: TRACK_ROW_LAYOUT.thumbnailWidth, height: 30, borderRadius: 1 }}>
-          <MusicNoteIcon sx={{ fontSize: 16 }} />
-        </Avatar>
+        <WaterRipple src={v.thumbnailUrl} active={Boolean(isCurrentTrack && isAudioPlaying)}>
+          <Avatar src={v.thumbnailUrl ?? undefined} variant="rounded" sx={{ width: TRACK_ROW_LAYOUT.thumbnailWidth, height: 30, borderRadius: 1 }}>
+            <MusicNoteIcon sx={{ fontSize: 16 }} />
+          </Avatar>
+        </WaterRipple>
         {(v.hqFileDownloaded || v.betterQualityExists) && (
           <Tooltip title={v.hqFileDownloaded ? t('playlists.videoList.hqDownloaded') : t('playlists.videoList.hqAvailable')}>
             <Box sx={{
