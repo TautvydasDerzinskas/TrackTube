@@ -11,6 +11,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import { RepeatMode } from '../../api/playbackState';
+import { SloshSlider } from './SloshSlider';
 
 interface MiniPlayerProps {
   title: string | undefined;
@@ -105,10 +106,6 @@ export function MiniPlayer({
     const time = Array.isArray(value) ? value[0] : value;
     setCurrentTime(time);
     if (audioRef.current) audioRef.current.currentTime = time;
-  };
-
-  const handleVolumeChange = (_event: Event, value: number | number[]) => {
-    onVolumeChange((Array.isArray(value) ? value[0] : value) / 100);
   };
 
   const thumbnail = (
@@ -209,12 +206,9 @@ export function MiniPlayer({
       >
         <Box sx={{ width: 220, py: 1.5, px: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <Slider
-              size="small"
-              value={volume * 100}
-              onChange={handleVolumeChange}
-              sx={{ color: 'primary.main', flexGrow: 1 }}
-            />
+            <Box sx={{ flexGrow: 1 }}>
+              <SloshSlider value={volume} onChange={onVolumeChange} aria-label={t('playlists.miniPlayer.volume')} />
+            </Box>
             <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0, minWidth: 34, textAlign: 'right' }}>
               {t('playlists.miniPlayer.volumePercent', { value: Math.round(volume * 100) })}
             </Typography>
