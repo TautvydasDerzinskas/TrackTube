@@ -10,8 +10,14 @@ interface WaterRippleProps {
   // Only takes beats while true — i.e. this is the current track and it's
   // playing. Waves already running still settle after it turns false.
   active: boolean;
+  // Theme spacing units, matching the child's own borderRadius.
+  borderRadius?: number;
   children: React.ReactNode;
 }
+
+// Caps the simulated grid, so a large thumbnail (the track page header)
+// costs about what a small one does: it just gets coarser cells.
+const MAX_CELLS = 2500;
 
 // Wave height kept per frame (lower = waves die out sooner).
 const DAMPING = 0.96;
@@ -36,7 +42,8 @@ interface Water {
 }
 
 /**
- * Classic two-buffer height-field water, one cell per CSS px. The cover is
+ * Classic two-buffer height-field water, one cell per CSS px (coarser past
+ * MAX_CELLS). The cover is
  * redrawn cell by cell with drawImage, offset by the surface's slope — it
  * never reads pixels back, so cross-origin thumbnails work without CORS.
  * Nothing runs while the surface is flat; the canvas is then cleared and the
@@ -54,17 +61,19 @@ function createWater(canvas: HTMLCanvasElement, getImage: () => HTMLImageElement
   // mobile/desktop MiniPlayer layouts differ) starts a fresh surface.
   const fit = () => {
     const { width, height } = canvas.getBoundingClientRect();
-    const nextCols = Math.round(width);
-    const nextRows = Math.round(height);
+    const cell = Math.max(1, Math.ceil(Math.sqrt((width * height) / MAX_CELLS)));
+    const nextCols = Math.round(width / cell);
+    const nextRows = Math.round(height / cell);
     if (nextCols === cols && nextRows === rows) return;
     cols = nextCols;
     rows = nextRows;
     current = new Float32Array(cols * rows);
     previous = new Float32Array(cols * rows);
     const dpr = window.devicePixelRatio || 1;
-    canvas.width = cols * dpr;
-    canvas.height = rows * dpr;
-    ctx?.setTransform(dpr, 0, 0, dpr, 0, 0);
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    // Everything below draws in cell units.
+    if (cols && rows) ctx?.setTransform((width * dpr) / cols, 0, 0, (height * dpr) / rows, 0, 0);
   };
 
   const step = () => {
@@ -150,7 +159,7 @@ function createWater(canvas: HTMLCanvasElement, getImage: () => HTMLImageElement
  * useBeatDetector) drops into it at a random spot, and the ripples spread,
  * bounce off the edges and bend the artwork as they pass.
  */
-export function WaterRipple({ src, active, children }: WaterRippleProps) {
+export function WaterRipple({ src, active, borderRadius = 1, children }: WaterRippleProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
   const waterRef = useRef<Water>();
@@ -182,7 +191,7 @@ export function WaterRipple({ src, active, children }: WaterRippleProps) {
   }, [active]);
 
   return (
-    <Box sx={{ position: 'relative', display: 'flex', flexShrink: 0, borderRadius: 1, overflow: 'hidden' }}>
+    <Box sx={{ position: 'relative', display: 'flex', flexShrink: 0, borderRadius, overflow: 'hidden' }}>
       {children}
       <canvas
         ref={canvasRef}
