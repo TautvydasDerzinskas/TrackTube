@@ -13,6 +13,7 @@ import { usePageBack, usePageTitle } from '../../contexts/PageBackContext';
 import { useTrackActions } from '../../hooks/useTrackActions';
 import { TrackContextMenu } from '../../components/TrackContextMenu';
 import { RollingPlaysCount } from '../../components/RollingPlaysCount';
+import { WaterRipple } from '../../components/WaterRipple';
 
 interface HeaderProps {
   playlistId: string;
@@ -47,9 +48,11 @@ export function Header({ playlistId, video, isCurrentTrack, isAudioPlaying, onTo
           column beside the thumbnail. */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
         <Box sx={{ position: 'relative', flexShrink: 0 }}>
-          <Avatar src={video.thumbnailUrl ?? undefined} variant="rounded" sx={{ width: 160, height: 120, borderRadius: 2 }}>
-            <MusicNoteIcon sx={{ fontSize: 48 }} />
-          </Avatar>
+          <WaterRipple src={video.thumbnailUrl} active={isPlayingThis} borderRadius={2}>
+            <Avatar src={video.thumbnailUrl ?? undefined} variant="rounded" sx={{ width: 160, height: 120, borderRadius: 2 }}>
+              <MusicNoteIcon sx={{ fontSize: 48 }} />
+            </Avatar>
+          </WaterRipple>
           {isPlayable ? (
             <Tooltip title={isPlayingThis ? t('playlists.videoList.pause') : t('playlists.videoList.play')}>
               <span>
